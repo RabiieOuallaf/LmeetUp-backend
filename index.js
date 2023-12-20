@@ -3,6 +3,8 @@ const cors = require('cors')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser');
 const redis = require('redis');
+const http = require("http").createServer(app);
+const socketio = require("socket.io")(http); // Pass the HTTP server object to Socket.IO
 
 const app = express()
 require('dotenv').config()
