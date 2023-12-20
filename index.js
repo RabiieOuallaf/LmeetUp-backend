@@ -2,10 +2,12 @@ const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser');
+const redis = require('redis');
 
 const app = express()
 require('dotenv').config()
 app.use(cors())
+const client = redis.createClient();
 const {connectedToDB} = require('./connection/mongodb')
 
 // database connection
@@ -13,7 +15,7 @@ connectedToDB();
 
 // test app
 app.get('/', (req, res) => {
-    res.send("folder structer folder")
+    res.send("folder structure folder")
 })
 
 // middlwares
