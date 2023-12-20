@@ -6,7 +6,7 @@ const { generateSaltedHash } = require('./../utils/generateHash')
 
 exports.signup = async (req, res) => {
     try {
-        if(req.body.confirmPass !== req.body.password || !req.body.confirmPass)
+        if(req.body.confirmPassword !== req.body.password || !req.body.confirmPassword)
             return res.status('400').json({error: userErrors.userError.passwordAndConfirmPasswordIsMatch})
 
         const user = new User(req.body)
@@ -16,7 +16,7 @@ exports.signup = async (req, res) => {
     }
     catch(error) {
         console.log(error)
-        res.status(400).json({error: error})
+        res.status(200).json({error: error})
     }
 }
 

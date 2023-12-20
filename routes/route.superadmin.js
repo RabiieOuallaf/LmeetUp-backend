@@ -4,7 +4,7 @@ const {CheckIfEmailIsExist, signup, signin, getOneAdmin} = require('../controlle
 const {formValidation} = require('../middlwars/formValidator')
 const {verifyAuhtHeaderToken, verifyCookieToken, adminByID, signOut} = require('../middlwars/auth')
 
-router.post('/signUp', formValidation, CheckIfEmailIsExist, signup)
+router.post('/SignUp', formValidation, CheckIfEmailIsExist, signup)
 router.post('/signIn', formValidation, signin)
 
 router.get('/:adminID', verifyAuhtHeaderToken, getOneAdmin)

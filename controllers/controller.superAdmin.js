@@ -1,29 +1,29 @@
-const Superadmin = require('./../models/model.superadmin')
+const SuperadminModel = require('./../models/model.superadmin')
 let superAdminErrors = require('./../errors/errors.superAdmin')
 const jwt = require('jsonwebtoken')
 const fs = require('fs')
 const { generateSaltedHash } = require('./../utils/generateHash')
 
 exports.signup = async (req, res) => {
+    
     try {
-        if(req.body.confirmPass !== req.body.password || !req.body.confirmPass) {
+        console.log(req.body.confirmPassword, req.body.password);
+        if(req.body.confirmPassword !== req.body.password || !req.body.confirmPassword) {
             return res.status('400').json({error: superAdminErrors.superAdminError.passwordAndConfirmPasswordIsMatch})
         }
+        const createdSuperAdminModel = new SuperadminModel(req.body)
+        await createdSuperAdminModel.save()
 
-        const superadmin = new Superadmin(req.body)
-        await superadmin.save()
-
-        res.json(superadmin)
+        res.json(createdSuperAdminModel)
     }
     catch(error) {
-        console.log(error)
         res.status(400).json({error: error})
     }
 }
 
 exports.CheckIfEmailIsExist = async (req, res, next) => {
     try {
-        const count = await Superadmin.countDocuments({email: req.body.email}).exec()
+        const count = await SuperadminModel.countDocuments({email: req.body.email}).exec()
 
         if (count !== 0)
             return res.status(400).json({ error: superAdminErrors.superAdminError.checkThisEmailIfAlreadyExist });
