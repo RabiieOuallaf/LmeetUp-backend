@@ -1,5 +1,5 @@
 let userErrors = require('./../errors/errors.user')
-const User = require('./../models/model.user')
+const User = require('../models/Users/model.user')
 
 const fs = require('fs');
 const jwt = require('jsonwebtoken');

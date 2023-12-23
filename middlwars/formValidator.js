@@ -33,7 +33,7 @@ function formValidation(req, res, next) {
     if (error) {
         return res.status(400).json({ error: error.details[0].message });
     } else {
-        req.body = value; // Update the request body with the validated values
+        req.body = value; 
         next();
     }
 }

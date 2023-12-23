@@ -1,4 +1,4 @@
-const SuperadminModel = require('./../models/model.superadmin')
+const SuperadminModel = require('../models/Users/model.superadmin')
 let superAdminErrors = require('./../errors/errors.superAdmin')
 const jwt = require('jsonwebtoken')
 const fs = require('fs')
@@ -35,9 +35,9 @@ exports.CheckIfEmailIsExist = async (req, res, next) => {
     }
 }
 
-exports.signin = async (req, res) => {
+exports.signIn = async (req, res) => {
     try {
-        const Query = await Superadmin.findOne({email: req.body.email})
+        const Query = await SuperadminModel.findOne({email: req.body.email})
         if(!Query)
             return res.status(404).json({error: superAdminErrors.superAdminError.checkThisEmailIfNotExist})
 

@@ -34,7 +34,7 @@ const superAdminRouter = require('./routes/route.superadmin')
 app.use('/api/v1/superAdmin', superAdminRouter)
 
 const usersRouter = require('./routes/route.user')
-app.use('/api/user', usersRouter)
+app.use('/api/v1/user', usersRouter)
 
 const port = process.env.PORT || 3000
 http.listen(port, () => console.log('\x1b[32m%s\x1b[0m', `app is now listening at port ${port}`))

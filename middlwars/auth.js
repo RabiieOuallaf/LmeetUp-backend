@@ -1,5 +1,5 @@
 let superAdminErrors = require('./../errors/errors.superAdmin')
-const Superadmin = require('./../models/model.superadmin')
+const Superadmin = require('../models/Users/model.superadmin')
 
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
@@ -24,7 +24,6 @@ exports.verifyAuhtHeaderToken = (req, res, next) => {
             if(user._id !== req.params.adminID)
                 return res.status(401).json({error: superAdminErrors.superAdminError.Unauthorized})
 
-            console.log("pass 1 => OK")
             next()
         });
     }
@@ -38,7 +37,7 @@ exports.verifyCookieToken = (req, res, next) => {
     const authIdCookie = req.cookies.user_id
 
     if(!authJwtCookie)
-        return res.json({error: superAdminErrors.superAdminError.Unauthorized})
+        return res.status(401).json({error: superAdminErrors.superAdminError.Unauthorized})
 
     const certPathPublic = process.env.PUBLIC_KEY_PATH;
 
@@ -54,7 +53,6 @@ exports.verifyCookieToken = (req, res, next) => {
             if(user._id !== authIdCookie)
                 return res.status(401).json({error: superAdminErrors.superAdminError.Unauthorized})
 
-            console.log("pass 2 => OK")
             next()
         });
     }

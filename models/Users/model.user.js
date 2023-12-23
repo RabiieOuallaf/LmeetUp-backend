@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
-const { generateSaltedHash } = require('./../utils/generateHash')
+const { generateSaltedHash } = require('../../utils/generateHash')
 
-const superAdminSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true
@@ -12,11 +12,11 @@ const superAdminSchema = new mongoose.Schema({
     }
 }, {timestamps: true})
 
-superAdminSchema.pre('save', async function(next) {
+ userSchema.pre('save', async function(next) {
     const hashedPassword = await generateSaltedHash(this.password)
 
     this.password = hashedPassword
     next()
 });
 
-module.exports = mongoose.model('SuperAdmin', superAdminSchema)
+module.exports = mongoose.model('User', userSchema)
