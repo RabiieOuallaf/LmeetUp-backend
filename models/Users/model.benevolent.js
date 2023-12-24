@@ -49,3 +49,6 @@ const benevolentSchema = new mongoose.Schema({
     },
     
 })
+
+const Benevolent = mongoose.model('Benevolent', benevolentSchema);
+module.exports = Benevolent;

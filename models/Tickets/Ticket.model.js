@@ -27,11 +27,15 @@ const ticketSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    // event: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Event',
-    //     required: true
-    // }
+    event: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event',
+        required: true
+    },
+    coupon : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Coupon',
+    }
 });
 
 const Ticket = mongoose.model('Ticket', ticketSchema);

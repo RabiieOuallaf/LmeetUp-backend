@@ -19,4 +19,6 @@ superAdminSchema.pre('save', async function(next) {
     next()
 });
 
-module.exports = mongoose.model('SuperAdmin', superAdminSchema)
+const superAdmin = mongoose.model('SuperAdmin', superAdminSchema)
+
+module.exports = superAdmin

@@ -34,7 +34,11 @@ const eventSchema = new mongoose.Schema({
     eventPlan: {
         type: Buffer,
         required: true
-    }
+    },
+    ticket: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Ticket',
+    },
 });
 
 const Event = mongoose.model('Event', eventSchema);

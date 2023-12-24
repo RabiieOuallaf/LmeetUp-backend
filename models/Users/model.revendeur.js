@@ -39,6 +39,15 @@ const revendeurSchema = new mongoose.Schema({
     identityDocumentNumber : {
         type : String,
         required: true
-    }
+    },
+    event : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'Event'
+    },
+
     
 },{timestamps: true})
+
+const Revendeur = mongoose.model('Revendeur', revendeurSchema);
+
+module.exports = Revendeur;
