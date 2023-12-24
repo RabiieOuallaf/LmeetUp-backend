@@ -4,11 +4,9 @@ const { generateSaltedHash } = require('../../utils/generateHash')
 const superAdminSchema = new mongoose.Schema({
     email: {
         type: String,
-        required: true
     },
     password: {
         type: Object,
-        required: true
     }
 }, {timestamps: true})
 

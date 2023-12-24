@@ -4,11 +4,9 @@ const { generateSaltedHash } = require('../../utils/generateHash')
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
-        required: true
     },
     password: {
         type: Object,
-        required: true
     }
 }, {timestamps: true})
 

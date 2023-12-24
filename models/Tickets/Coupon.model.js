@@ -10,21 +10,17 @@ const couponSchema = new mongoose.Schema({
     },
     discount: {
         type: Number,
-        required: true
     },
     type : {
         type : String,
         enum : Object.values(couponTypes),
-        required: true
     },
     creator : {
         type : String,
         enum : Object.values(couponCreatorTypes),
-        required: true
     },
     expirationDate: {
         type: Date,
-        required: true
     },
     isActive: {
         type: Boolean,

@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meetup_app
+    ports:
+      - "3005:3005"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+    depends_on:
+      - mongo
+      - redis
+
+  mongo:
+    image: mongo:latest
+    container_name: meetup_mongo
+    ports:
+      - "27017:27017"
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: ${DATABASE}
+
+  redis:
+    image: redis:latest
+    container_name: meetup_redis
+    env_file:
+      - .env
+    ports:
+      - "6300:6300"
