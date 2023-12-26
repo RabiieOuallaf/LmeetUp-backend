@@ -102,6 +102,61 @@ exports.signIn = async (req, res) => {
     }
 }
 
+exports.refreshToken = async (req, res, next) => {
+        const jwtRefreshToken = req.refreshToken
+
+        console.log(jwtRefreshToken)
+
+        if(!jwtRefreshToken)
+            return res.status(401).json({error: superAdminErrors.superAdminError.Unauthorized})
+            next()
+
+        const certPathPublic = process.env.PUBLIC_KEY_PATH;
+
+        try {
+            const cert = fs.readFileSync(certPathPublic)
+
+            const newAccessToken = jwt.sign(
+                { _id: req.params.adminID, exp: Math.floor(Date.now() / 1000) + (3 * 60 * 60) },
+                cert,
+                { algorithm: 'RS512' }
+            )
+            
+            const newRefreshToken = jwt.sign(
+                { _id: req.params.adminID, exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) },
+                cert,
+                { algorithm: 'RS512' }
+            )
+            
+            let encryptedAccessToken = encryptData(newAccessToken)
+            let encryptedRefreshToken = encryptData(newRefreshToken)
+
+            res.
+            cookie('accessToken', encryptedAccessToken, 
+                { 
+                    maxAge: 3 * 60 * 60 * 1000,
+                    sameSite: 'strict', // Prevent CSRF attacks 
+                    secure: process.env.NODE_ENV === 'production', // Prevent http interception in production 
+                }
+            )
+
+            res.cookie('refreshToken', encryptedRefreshToken,
+                {
+                    maxAge: 24 * 60 * 60 * 1000,
+                    sameSite: 'strict',
+                    secure: process.env.NODE_ENV === 'production',
+                }
+            )
+
+            res.json({ accessToken: encryptedAccessToken, refreshToken: encryptedRefreshToken});
+        
+        } catch(err) {
+            return res.status(500).json({error: err})
+        }
+}
+    
+
+
 exports.getOneAdmin = async (req, res) => {
     res.json(req.userInfo)
 }

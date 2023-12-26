@@ -10,8 +10,8 @@ exports.encryptData = (data) => {
     return Buffer.from(cipher.update(data, 'utf8', 'hex') + cipher.final('hex')
     ).toString('base64')
 
-
 }
+
 exports.decryptData = (encryptedData) => {
     const buff = Buffer.from(encryptedData , 'base64')
     const decipher = crypto.createDecipheriv(ENCRYPTION_METHOD, ENCRYPTION_KEY, ENCRYPTION_IV)
