@@ -3,6 +3,7 @@ let superAdminErrors = require('./../errors/errors.superAdmin')
 const jwt = require('jsonwebtoken')
 const fs = require('fs')
 const { generateSaltedHash } = require('./../utils/generateHash')
+const {encryptData} = require('../helpers/encryptionHelper')
 
 exports.signup = async (req, res) => {
     
@@ -38,39 +39,73 @@ exports.CheckIfEmailIsExist = async (req, res, next) => {
 exports.signIn = async (req, res) => {
     try {
         const Query = await SuperadminModel.findOne({email: req.body.email})
-        if(!Query)
+        if(!Query){
             return res.status(404).json({error: superAdminErrors.superAdminError.checkThisEmailIfNotExist})
+        }
 
-            const hashedPassword = await generateSaltedHash(req.body.password, Query.password.salt, Query.password.uuid)
+        const hashedPassword = await generateSaltedHash(req.body.password, Query.password.salt, Query.password.uuid)
 
-            if(hashedPassword.hash !== Query.password.hash)
-                return res.status(401).json({error: superAdminErrors.superAdminError.invalidUserPassword})
+        if(hashedPassword.hash !== Query.password.hash){
+            return res.status(401).json({error: superAdminErrors.superAdminError.invalidUserPassword})
+        }
 
-            // expire after 1 hours exp: Math.floor(Date.now() / 1000) + (60 * 60)
-            const certPath = process.env.PRIVATE_KEY_PATH;
-            try {
-                const cert = fs.readFileSync(certPath);
-                const token = jwt.sign(
-                    { _id: Query._id, exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) },
-                    cert,
-                    { algorithm: 'RS512' }
-                );
-    
-                Query.password = undefined;
+        const certPath = process.env.PRIVATE_KEY_PATH;
 
-                res.cookie('token', token, { expire: Math.floor(Date.now() / 1000) + (24 * 60 * 60) })
-                res.cookie('user_id', Query._id)
+        try {
 
-                res.json({ userInfo: Query, token: token });
-            } catch (readError) {
-                res.status(500).json({ error: superAdminErrors.superAdminError.invalidCert });
-            }
+            const cert = fs.readFileSync(certPath);
+            const accessToken = jwt.sign(
+                { _id: Query._id, exp: Math.floor(Date.now() / 1000) + (3 * 60 * 60) },
+                cert,   
+                { algorithm: 'RS512' }
+            )
+
+            const refreshToken = jwt.sign(
+                { _id: Query._id, exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) },
+                cert,
+                { algorithm: 'RS512' }
+            )
+            // generate secret hash to use as encryption key
+            let encryptedAccessToken = encryptData(accessToken)
+            let encryptedRefreshToken = encryptData(refreshToken)
+            Query.password = undefined;
+            
+            res.
+            cookie('accessToken', accessToken, 
+                { 
+                    maxAge: 3 * 60 * 60 * 1000,
+                    sameSite: 'strict', // Prevent CSRF attacks 
+                    secure: process.env.NODE_ENV === 'production', // Prevent http interception in production 
+                }
+            )
+            res.
+            cookie('refreshToken', refreshToken,
+                {
+                    maxAge: 24 * 60 * 60 * 1000,
+                    sameSite: 'strict',
+                    secure: process.env.NODE_ENV === 'production',
+                }
+            )
+            res.
+            cookie('user_id', Query._id)
+
+            res.
+            json({ userInfo: Query , accessToken: encryptedAccessToken, refreshToken: encryptedRefreshToken});
+
+
+        } catch (readError) {
+            res.status(500).json({ error: superAdminErrors.superAdminError.invalidCert });
+        }
     }
     catch(error) {
-
+        res.status(400).json({error: error})
     }
 }
 
 exports.getOneAdmin = async (req, res) => {
     res.json(req.userInfo)
 }
+
+
+
+

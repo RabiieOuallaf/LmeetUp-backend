@@ -24,7 +24,6 @@ exports.verifyAuhtHeaderToken = (req, res, next) => {
             if(user._id !== req.params.adminID)
                 return res.status(401).json({error: userErrors.userError.Unauthorized})
 
-            console.log("pass 1 => OK")
             next()
         });
     }
