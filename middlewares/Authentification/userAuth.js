@@ -1,10 +1,11 @@
-let userErrors = require('./../errors/errors.user')
-const User = require('../models/Users/model.user')
+let userErrors = require('../../errors/errors.user')
+const User = require('../../models/Users/model.user')
 
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 
-exports.verifyAuhtHeaderToken = (req, res, next) => {
+
+exports.verifyAuthHeaderToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
 
     if(!authHeader)

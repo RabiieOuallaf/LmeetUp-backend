@@ -1,4 +1,4 @@
-let superAdminErrors = require('./../errors/errors.superAdmin')
+let superAdminErrors = require('../../errors/errors.superAdmin')
 const Joi = require("joi")
 
 function formValidation(req, res, next) {

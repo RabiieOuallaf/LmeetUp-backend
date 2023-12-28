@@ -1,8 +1,8 @@
-const User = require('../models/Users/model.user')
-let userErrors = require('./../errors/errors.user')
+const User = require('../../models/Users/model.user')
+let userErrors = require('../../errors/errors.user')
 const jwt = require('jsonwebtoken')
 const fs = require('fs');
-const { generateSaltedHash } = require('./../utils/generateHash')
+const { generateSaltedHash } = require('../../utils/generateHash')
 
 exports.signup = async (req, res) => {
     try {

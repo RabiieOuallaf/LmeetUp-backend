@@ -1,14 +1,14 @@
-const SuperadminModel = require('../models/Users/model.superadmin')
-let superAdminErrors = require('./../errors/errors.superAdmin')
+const SuperadminModel = require('../../models/Users/model.superadmin')
+let superAdminErrors = require('../../errors/errors.superAdmin')
 const jwt = require('jsonwebtoken')
 const fs = require('fs')
-const { generateSaltedHash } = require('./../utils/generateHash')
-const {encryptData} = require('../helpers/encryptionHelper')
+const { generateSaltedHash } = require('../../utils/generateHash')
+const {encryptData} = require('../../utils/encryptionUtil')
 
 exports.signup = async (req, res) => {
     
     try {
-        console.log(req.body.confirmPassword, req.body.password);
+
         if(req.body.confirmPassword !== req.body.password || !req.body.confirmPassword) {
             return res.status('400').json({error: superAdminErrors.superAdminError.passwordAndConfirmPasswordIsMatch})
         }
@@ -16,6 +16,7 @@ exports.signup = async (req, res) => {
         await createdSuperAdminModel.save()
 
         res.json(createdSuperAdminModel)
+        
     }
     catch(error) {
         res.status(400).json({error: error})

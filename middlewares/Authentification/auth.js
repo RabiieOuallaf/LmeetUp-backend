@@ -1,13 +1,13 @@
-let superAdminErrors = require('./../errors/errors.superAdmin')
-const Superadmin = require('../models/Users/model.superadmin')
+let superAdminErrors = require('../../errors/errors.superAdmin')
+const Superadmin = require('../../models/Users/model.superadmin')
 
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 
-const {decryptData} = require('../helpers/encryptionHelper')
+const {decryptData} = require('../../utils/encryptionUtil')
 
 
-exports.verifyAuhtHeaderToken = (req, res, next) => {
+exports.verifyAuthHeaderToken = (req, res, next) => {
 
 
     const encryptedAccessToken =  req.headers['authorization']
