@@ -2,8 +2,9 @@ const mongoose = require('mongoose');
 
 const eventSchema = new mongoose.Schema({
     category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category',
+        // type: mongoose.Schema.Types.ObjectId,
+        type : String,
+        // ref: 'Category',
     },
     startTime: {
         type: Date,
@@ -21,13 +22,14 @@ const eventSchema = new mongoose.Schema({
         type: String,
     },
     city: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'City',
+        // type: mongoose.Schema.Types.ObjectId,
+        type : String,
+        // ref: 'City',
     },
     eventPlan: {
         type: String,
     }
-});
+}, { timestamps: true });
 
 const Event = mongoose.model('Event', eventSchema);
 
