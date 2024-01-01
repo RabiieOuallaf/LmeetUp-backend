@@ -22,7 +22,7 @@ const revendeurSchema = new mongoose.Schema({
     pseudo: {
         type: String,
     },
-    birthday : {
+    birthdate: {
         type : Date,
     },
     identityDocumentType : {
@@ -40,6 +40,12 @@ const revendeurSchema = new mongoose.Schema({
     
 },{timestamps: true})
 
+revendeurSchema.pre('save', async function(next) {
+    const hashedPassword = await generateSaltedHash(this.password)
+
+    this.password = hashedPassword
+    next()
+});
 const Revendeur = mongoose.model('Revendeur', revendeurSchema);
 
 module.exports = Revendeur;

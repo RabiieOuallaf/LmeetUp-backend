@@ -1,13 +1,10 @@
 const eventError = require('../../errors/error.event')
 const Joi = require('joi')
-
 function formValidation(req, res, next) {
     
     const formSchema = Joi.object({
-        category: Joi.string()
+        category: Joi.string().hex().length(24)
             .required()
-            .min(3)
-            .max(25)
             .messages({
                 "string.empty": eventError.eventError.emptyCategory,
                 "string.required": eventError.eventError.emptyCategory
@@ -15,26 +12,26 @@ function formValidation(req, res, next) {
         startTime: Joi.date()
             .required()
             .messages({
-                "string.empty": eventError.eventError.emptyTime,
-                "string.required": eventError.eventError.emptyTime
+                "any.empty": eventError.eventError.emptyTime,
+                "any.required": eventError.eventError.emptyTime
             }),
         endTime: Joi.date()
         .required()
         .messages({
-            "string.empty": eventError.eventError.emptyTime,
-            "string.required": eventError.eventError.emptyTime
+            "any.empty": eventError.eventError.emptyTime,
+            "any.required": eventError.eventError.emptyTime
         }),
         turnOver: Joi.number()
             .required()
             .messages({
-                "string.empty": eventError.eventError.chiffreDaffaire,
-                "string.required": eventError.eventError.chiffreDaffaire
+                "number.empty": eventError.eventError.chiffreDaffaire,
+                "number.required": eventError.eventError.chiffreDaffaire
             }),
         totalTickets: Joi.number()
             .required()
             .messages({
-                "string.empty": eventError.eventError.ticketTotal,
-                "string.required": eventError.eventError.ticketTotal
+                "number.empty": eventError.eventError.ticketTotal,
+                "number.required": eventError.eventError.ticketTotal
             }),
         image: Joi.binary()
             .optional()
@@ -54,10 +51,8 @@ function formValidation(req, res, next) {
                     "any.empty": eventError.eventError.videoUrl,
                     "any.required": eventError.eventError.videoUrl
                 }),
-        city: Joi.string()
+        city: Joi.string().hex().length(24)
             .required()
-            .min(3)
-            .max(25)
             .messages({
                 "string.empty": eventError.eventError.city,
                 "string.required": eventError.eventError.city

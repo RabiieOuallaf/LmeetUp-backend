@@ -8,7 +8,6 @@ const {encryptData} = require('../../utils/encryptionUtil')
 exports.signup = async (req, res) => {
     
     try {
-
         if(req.body.confirmPassword !== req.body.password || !req.body.confirmPassword) {
             return res.status('400').json({error: superAdminErrors.superAdminError.passwordAndConfirmPasswordIsMatch})
         }
@@ -72,7 +71,7 @@ exports.signIn = async (req, res) => {
             Query.password = undefined;
             
             res.
-            cookie('accessToken', accessToken, 
+            cookie('accessToken', encryptedAccessToken, 
                 { 
                     maxAge: 3 * 60 * 60 * 1000,
                     sameSite: 'strict', // Prevent CSRF attacks 
@@ -80,7 +79,7 @@ exports.signIn = async (req, res) => {
                 }
             )
             res.
-            cookie('refreshToken', refreshToken,
+            cookie('refreshToken', encryptedRefreshToken,
                 {
                     maxAge: 24 * 60 * 60 * 1000,
                     sameSite: 'strict',
@@ -159,7 +158,17 @@ exports.refreshToken = async (req, res, next) => {
 
 
 exports.getOneAdmin = async (req, res) => {
-    res.json(req.userInfo)
+    try {
+        const adminId = req.params.id
+        const admin = await SuperadminModel.findById(adminId)
+        if(!admin){
+            return res.status(404).json({error: superAdminErrors.superAdminError.adminNotFound})
+        }
+        res.json({admin})
+    }
+    catch(error) {
+        res.status(400).json({error: error})
+    }
 }
 
 

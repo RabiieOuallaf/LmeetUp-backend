@@ -8,9 +8,8 @@ const categorySchema = new mongoose.Schema({
         type: String,
     },
     events: [{
-        // type: mongoose.Schema.Types.ObjectId,
-        type: String,
-        // ref: 'Event'
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event'
     }]
 });
 

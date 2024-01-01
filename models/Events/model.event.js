@@ -2,15 +2,14 @@ const mongoose = require('mongoose');
 
 const eventSchema = new mongoose.Schema({
     category: {
-        // type: mongoose.Schema.Types.ObjectId,
-        type : String,
-        // ref: 'Category',
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category',
     },
     startTime: {
         type: Date,
     },
     endTime: {
-        
+
         type: Date,
     },
     turnOver: { // Chiffre d'affaire
@@ -29,9 +28,8 @@ const eventSchema = new mongoose.Schema({
         type : String 
     },
     city: {
-        // type: mongoose.Schema.Types.ObjectId,
-        type : String,
-        // ref: 'City',
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'City',
     },
     eventPlan: {
         type: String,

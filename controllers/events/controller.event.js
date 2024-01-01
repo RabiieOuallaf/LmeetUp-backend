@@ -100,7 +100,8 @@ exports.getAllEvents = async (req, res) => {
         return; 
       }
   
-      const events = await Event.find();
+      const events = await Event.find().populate('category')
+      .exec();
   
       if (events.length > 0) {
         res.json({ events });
@@ -129,7 +130,8 @@ exports.getOneEvent = async (req, res) => {
             return;
         }
 
-        const event = await Event.findById(eventId);
+        const event = await Event.findById(eventId).populate('category')
+        .exec();
 
         if (event) {
             res.json({ event });
