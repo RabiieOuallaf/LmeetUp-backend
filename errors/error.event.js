@@ -3,6 +3,8 @@ exports.eventError = {
     emptyTime : "Veuillez entrer event time",
     chiffreDaffaire : "Veuillez entrer event chiffreDaffaire",
     ticketTotal : "Veuillez entrer event ticket total",
-    imageUrl : "Veuillez entrer event image url",
+    imageUrl : "Veuillez entrer event image ",
+    miniatureUrl : "Veuillez entrer event miniature ",
     city : "Veuillez entrer ville",
+    videoUrl : "Veuillez entrer videoUrl"
 }

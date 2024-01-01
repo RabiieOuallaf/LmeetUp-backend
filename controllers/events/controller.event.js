@@ -1,9 +1,23 @@
-const Event = require("../../models/Events/model.event");
-const redisClient = require("../../utils/redisClient");
-
+const Event = require("../../models/Events/model.event")
+const redisClient = require("../../utils/redisClient")
+const fs = require('fs');
+const path = require('path');
 exports.addEvent = async (req, res) => {
     try {
-      const event = await new Event(req.body).save();
+  
+      const eventData = {
+        category: req.body.category,
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
+        turnOver: req.body.turnOver,
+        totalTickets: req.body.totalTickets,
+        imageUrl: req.files['image'] ? req.files['image'][0].path : '', 
+        miniatureUrl : req.files['miniature'] ? req.files['miniature'][0].path : '',
+        videoUrl : req.body.videoUrl,
+        city: req.body.city,
+      };
+      const event = await new Event(eventData).save();
+      
   
       redisClient.connect();
       let events = await redisClient.get('events');
@@ -14,7 +28,7 @@ exports.addEvent = async (req, res) => {
       }
       events.push(event);
   
-      await redisClient.setEx('events', 5400, JSON.stringify(events));
+      await redisClient.setEx('events', 300, JSON.stringify(events));
   
       res.status(201).json(event);
     } catch (error) {
@@ -25,24 +39,56 @@ exports.addEvent = async (req, res) => {
     }
   };
   
-exports.updateEvent = async (req, res) => {
+  exports.updateEvent = async (req, res) => {
     try {
-        const foundEvent = await Event.findById(req.params.id);
-        if (!foundEvent) res.status(400).json({ error: "Event not found" });
-    
-        Object.assign(foundEvent, req.body);
-    
-        const updatedEvent = await foundEvent.save();
-        if (updatedEvent) {
-          await client.setEx("events", 5400, JSON.stringify(updatedEvent));
-          res.json({ updatedEvent });
-        } else {
-          res.status(400).json({ error: "An error occurred during event updation" });
-        }
-      } catch (error) {
-        res.status(400).json({ error });
+      const foundEvent = await Event.findById(req.params.id);
+      if (!foundEvent) {
+        return res.status(404).json({ error: "Event not found" });
       }
-};
+  
+      redisClient.connect();
+  
+      const events = await redisClient.get('events');
+      let updatedEvents = events ? JSON.parse(events) : [];
+
+      updatedEvents = updatedEvents.filter(event => event._id.toString() !== req.params.id);
+  
+      if (foundEvent.imageUrl) {
+        const imagePath = path.join(__dirname, '..', '..' , foundEvent.imageUrl);
+        fs.unlinkSync(imagePath);
+    }
+
+      const eventData = {
+        category: req.body.category || foundEvent.category,
+        startTime: req.body.startTime || foundEvent.startTime,
+        endTime: req.body.endTime || foundEvent.endTime,
+        turnOver: req.body.turnOver || foundEvent.turnOver,
+        totalTickets: req.body.totalTickets || foundEvent.totalTickets,
+        imageUrl: req.files['image'] ? req.files['image'][0].path : foundEvent.imageUrl,
+        miniatureUrl : req.files['miniature'] ? req.files['miniature'][0].path : foundEvent.miniatureUrl,
+        videoUrl : req.body.videoUrl || foundEvent.videoUrl,
+        city: req.body.city || foundEvent.city,
+      };
+
+    
+      Object.assign(foundEvent, eventData);
+      const updatedEvent = await foundEvent.save();
+  
+      updatedEvents.push(updatedEvent);
+  
+      await redisClient.setEx('events', 300, JSON.stringify(updatedEvents));
+      return res.json({ updatedEvent });
+  
+    } catch (error) {
+      console.error('Error in updateEvent:', error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+  
+    } finally {
+      await redisClient.quit();
+    }
+  };
+  
+
 
 exports.getAllEvents = async (req, res) => {
     try {
@@ -58,7 +104,7 @@ exports.getAllEvents = async (req, res) => {
   
       if (events.length > 0) {
         res.json({ events });
-        await redisClient.set('events', 5400, JSON.stringify(events)); // Cache the results
+        await redisClient.setEx('events', 300, JSON.stringify(events)); // Cache the results
       } else {
         res.status(400).json({ error: "No events found" });
       }
@@ -87,7 +133,7 @@ exports.getOneEvent = async (req, res) => {
 
         if (event) {
             res.json({ event });
-            await redisClient.setEx(`event:${eventId}`, 5400, JSON.stringify(event)); 
+            await redisClient.setEx(`event:${eventId}`, 300, JSON.stringify(event)); 
         } else {
             res.status(400).json({ error: "No event found" });
         }
@@ -100,7 +146,7 @@ exports.getOneEvent = async (req, res) => {
 };
 
 exports.deleteEvent = async (req, res) => {
-    const eventId = req.params.id;
+    let eventId = req.params.id;
     try {
         const foundEvent = await Event.findById(eventId);
         

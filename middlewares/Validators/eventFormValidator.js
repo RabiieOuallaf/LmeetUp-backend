@@ -1,7 +1,8 @@
-const eventError = require('../../errors/error.event');
-const Joi = require('joi');
+const eventError = require('../../errors/error.event')
+const Joi = require('joi')
 
 function formValidation(req, res, next) {
+    
     const formSchema = Joi.object({
         category: Joi.string()
             .required()
@@ -35,13 +36,24 @@ function formValidation(req, res, next) {
                 "string.empty": eventError.eventError.ticketTotal,
                 "string.required": eventError.eventError.ticketTotal
             }),
-        imageUrl: Joi.string()
-            .required()
-            .min(10)
+        image: Joi.binary()
+            .optional()
             .messages({
-                "string.empty": eventError.eventError.imageUrl,
-                "string.required": eventError.eventError.imageUrl
+                "any.empty": eventError.eventError.imageUrl,
+                "any.required": eventError.eventError.imageUrl
             }),
+        miniature: Joi.binary()
+                .optional()
+                .messages({
+                    "any.empty": eventError.eventError.miniatureUrl,
+                    "any.required": eventError.eventError.miniatureUrl
+                }),
+        videoUrl : Joi.string()
+                .required()
+                .messages({
+                    "any.empty": eventError.eventError.videoUrl,
+                    "any.required": eventError.eventError.videoUrl
+                }),
         city: Joi.string()
             .required()
             .min(3)
@@ -51,7 +63,6 @@ function formValidation(req, res, next) {
                 "string.required": eventError.eventError.city
             })
     });
-
     const { value, error } = formSchema.validate(req.body);
 
     if (error) {

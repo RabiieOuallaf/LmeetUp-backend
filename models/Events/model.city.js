@@ -5,7 +5,7 @@ const citySchema = new mongoose.Schema({
         type: String,
     },
     
-});
+}, { timestamps: true });
 
 const City = mongoose.model('City', citySchema);
 
