@@ -7,9 +7,9 @@ const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/au
 
 
 
-router.post('/add' ,upload, formValidation,addEvent)
-router.post('/addAdvanced/:id',advancedAddEvent)
-router.put('/update/:id',upload, formValidation, updateEvent)
+router.post('/add', verifyAuthHeaderToken ,upload, formValidation,addEvent)
+router.post('/addAdvanced/:id',verifyAuthHeaderToken,advancedAddEvent)
+router.put('/update/:id', verifyAuthHeaderToken,upload, formValidation, updateEvent)
 
 
 router.get('/getAll' ,getAllEvents)
