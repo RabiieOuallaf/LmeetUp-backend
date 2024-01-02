@@ -13,7 +13,7 @@ exports.signUp = async (req, res) => {
         const createdRevendeurModel = new RevendeurModel(req.body)
         await createdRevendeurModel.save()
 
-        res.json(createdRevendeurModel)
+        res.status(201).json(createdRevendeurModel)
     } catch (error) {
         res.status(400).json({error: error})
     }
@@ -112,7 +112,7 @@ exports.getOneRevendeur = async (req, res) => {
             return res.status(404).json({error: RevendeurErrors.revendeurError.revendeurNotFound})
         }
 
-        res.json(revendeur)
+        res.status(200).json(revendeur)
     } catch (error) {
         res.status(500).json({error: error})
     }

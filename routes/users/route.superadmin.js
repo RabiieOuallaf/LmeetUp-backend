@@ -9,7 +9,7 @@ const {verifyAuthHeaderToken, verifyCookieToken, adminByID, signOut} = require('
 router.post('/signUp', formValidation, CheckIfEmailIsExist, signup)
 router.post('/signIn', formValidation, signIn)
 
-router.get('/:adminID', verifyAuthHeaderToken, getOneAdmin)
+router.get('/:id', verifyAuthHeaderToken, getOneAdmin)
 router.post('/signOut', signOut)
 router.post('/refreshToken', refreshToken)
 

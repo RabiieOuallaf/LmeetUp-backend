@@ -1,7 +1,8 @@
 const Event = require("../../models/Events/model.event")
 const redisClient = require("../../utils/redisClient")
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
+
 exports.addEvent = async (req, res) => {
     try {
   
@@ -12,12 +13,24 @@ exports.addEvent = async (req, res) => {
         turnOver: req.body.turnOver,
         totalTickets: req.body.totalTickets,
         imageUrl: req.files['image'] ? req.files['image'][0].path : '', 
-        miniatureUrl : req.files['miniature'] ? req.files['miniature'][0].path : '',
-        videoUrl : req.body.videoUrl,
+        miniatureUrl: req.files['miniature'] ? req.files['miniature'][0].path : '',
+        videoUrl: req.body.videoUrl,
         city: req.body.city,
-      };
-      const event = await new Event(eventData).save();
-      
+    };
+
+    const event = await new Event(eventData).save();
+
+    if (req.body.title || req.body.description || req.body.eventClass) {
+        const additionalData = {
+            title: req.body.title || 'Sans titre',
+            description: req.body.description || 'Sans description',
+            eventClass: req.body.eventClass || null,
+        };
+
+        Object.assign(event, additionalData);
+
+        await event.save();
+    }
   
       redisClient.connect();
       let events = await redisClient.get('events');
@@ -38,6 +51,42 @@ exports.addEvent = async (req, res) => {
         await redisClient.quit();
     }
   };
+
+
+
+  exports.advancedAddEvent = async (req, res, next) => {
+    try {
+      const foundEvent = await Event.findById(req.params.id);
+
+      if (!foundEvent) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      foundEvent.title = req.body.title || foundEvent.title;
+      foundEvent.description = req.body.description || foundEvent.description;
+      foundEvent.eventClass = req.body.eventClass || foundEvent.eventClass;
+
+      const updatedEvent = await foundEvent.save();
+
+      if (updatedEvent) {
+        redisClient.connect();
+        const events = await redisClient.get('events');
+        let updatedEvents = events ? JSON.parse(events) : [];
+        updatedEvents = updatedEvents.filter(event => event._id.toString() !== req.params.id);
+        res.status(201).json({updatedEvent});
+        
+      } else {
+        return res.status(500).json({ error: "Failed to update event" });
+      }
+
+
+    } catch (error) {
+      console.error('Error adding event:', error);
+      next(error)
+    } finally {
+        await redisClient.quit();
+    }
+
+  }
   
   exports.updateEvent = async (req, res) => {
     try {
@@ -68,6 +117,9 @@ exports.addEvent = async (req, res) => {
         miniatureUrl : req.files['miniature'] ? req.files['miniature'][0].path : foundEvent.miniatureUrl,
         videoUrl : req.body.videoUrl || foundEvent.videoUrl,
         city: req.body.city || foundEvent.city,
+        title : req.body.title || foundEvent.title,
+        description : req.body.description || foundEvent.description,
+        eventClass : req.body.eventClass || foundEvent.eventClass
       };
 
     

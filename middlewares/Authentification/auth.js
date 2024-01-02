@@ -11,8 +11,7 @@ exports.verifyAuthHeaderToken = (req, res, next) => {
 
 
     const encryptedAccessToken =  req.headers['authorization']
-    // const encryptedRefreshToken = req.headers['refreshToken']
-
+    const encryptedRefreshToken = req.headers['refreshToken']
 
     if(!encryptedAccessToken)
         return res.status(401).json({error: superAdminErrors.superAdminError.Unauthorized})
@@ -24,10 +23,10 @@ exports.verifyAuthHeaderToken = (req, res, next) => {
     try {
         const encryptedAccessTokenWithoutBearer = encryptedAccessToken.split(' ')[1]
         let decodedAccessToken = decryptData(encryptedAccessTokenWithoutBearer)
-
-        const  cert = fs.readFileSync(certPathPublic)
+        const cert = fs.readFileSync(certPathPublic)
 
         jwt.verify(decodedAccessToken, cert, { algorithms: ['RS512'] }, (err, user) => {
+            
             if (err) {
                 return res.status(403).json({ error: superAdminErrors.superAdminError.Unauthorized });
             }

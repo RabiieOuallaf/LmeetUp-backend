@@ -1,6 +1,18 @@
 const mongoose = require('mongoose');
-
+const seatType = require('../../enums/enum.SeatTypes');
 const eventSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        default: 'Sans titre',
+    },
+    description: {
+        type: String,
+        default: 'Sans description',
+    },
+    eventClass: {
+        type: String,
+        default: null,
+    },
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',

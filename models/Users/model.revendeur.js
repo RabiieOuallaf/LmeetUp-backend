@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { generateSaltedHash } = require('../../utils/generateHash');
-const { identityDocumentTypes } = require('../../enums/enum.identityDocumentTypes');
+const identityDocumentTypes  = require('../../enums/enum.identityDocumentTypes');
 
 const revendeurSchema = new mongoose.Schema({
     firstName: {
@@ -11,7 +11,6 @@ const revendeurSchema = new mongoose.Schema({
     },
     email : {
         type: String,
-        // add trim
     },
     password: {
         type: Object,

@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 
 exports.verifyAuthHeaderToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
+    
+    
 
     if(!authHeader)
         return res.json({error: userErrors.userError.Unauthorized})
@@ -16,8 +18,9 @@ exports.verifyAuthHeaderToken = (req, res, next) => {
     try {
         const cert = fs.readFileSync(certPathPublic)
         const token = authHeader.split(' ')[1]
-
+        console.log(token);
         jwt.verify(token, cert, { algorithms: ['RS512'] }, (err, user) => {
+            console.log(user)
             if (err) {
                 return res.status(403).json({ error: userErrors.userError.Unauthorized });
             }

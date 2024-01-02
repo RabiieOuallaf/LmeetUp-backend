@@ -3,6 +3,12 @@ const Joi = require('joi')
 function formValidation(req, res, next) {
     
     const formSchema = Joi.object({
+        title : Joi.string()
+            .optional(),
+        description: Joi.string()
+            .optional(),
+        evenClass : Joi.string()
+            .optional(),
         category: Joi.string().hex().length(24)
             .required()
             .messages({
