@@ -57,15 +57,14 @@ exports.updateClass = async (req, res) => {
 exports.getOneClass = async (req, res) => {
     try {
         let classId = req.params.id
-
         redisClient.connect()
-        let cachedClass = redisClient.get(`class:${classId}`)
+        let cachedClass = await redisClient.get(`class:${classId}`)
         if (cachedClass) {
             cachedClass = JSON.parse(cachedClass)
             return res.json({ cachedClass })
         }
 
-        const foundClass = await Class.findById(classId).populate('events')
+        const foundClass = await Class.findById(classId).populate('tickets')
 
         if (!foundClass) return res.status(404).json({ error: 'Class not found' })
 
@@ -75,6 +74,17 @@ exports.getOneClass = async (req, res) => {
     } catch (error) {
         console.error('Error getting class:', error)
         res.status(400).json({ error })
+    } finally {
+        try {
+            const pong = await redisClient.ping()
+
+            if(pong === 'PONG') {
+                await redisClient.quit()
+            }
+        } catch {
+            console.error('Error pinging redis:', error)
+        }
+        
     }
 }
 
@@ -87,7 +97,7 @@ exports.getAllClasses = async (req, res) => {
             return res.json({ cachedClasses })
         }
 
-        const classes = await Class.find().populate('events')
+        const classes = await Class.find().populate('tickets')
 
         if (!classes) return res.status(404).json({ error: 'Classes not found' })
 
@@ -95,6 +105,17 @@ exports.getAllClasses = async (req, res) => {
     } catch (error) {
         console.error('Error getting classes:', error)
         res.status(400).json({ error })
+    } finally {
+        try {
+            const pong = await redisClient.ping()
+
+            if(pong === 'PONG') {
+                await redisClient.quit()
+            }
+        } catch {
+            console.error('Error pinging redis:', error)
+        }
+    
     }
 }
 
@@ -116,7 +137,15 @@ exports.deleteClass = async (req, res) => {
         console.error('Error deleting class:', error)
         res.status(400).json({ error })
     } finally {
-        await redisClient.quit()
+        try {
+            const pong = await redisClient.ping()
+
+            if(pong === 'PONG') {
+                await redisClient.quit()
+            }
+        } catch {
+            console.error('Error pinging redis:', error)
+        }
     }
 }
 

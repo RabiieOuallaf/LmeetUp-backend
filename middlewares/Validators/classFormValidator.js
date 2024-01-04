@@ -7,17 +7,21 @@ function formValidation(req, res, next) {
             name : Joi.string()
                 .required()
                 .messages({
-                    "string.empty": classError.classError.emptyName,
-                    "string.required": classError.classError.emptyName
+                    "string.empty": classError.classError.classNameEmpty,
+                    "string.required": classError.classError.classNameEmpty
                 }),
             description: Joi.string()
                 .required()
                 .messages({
-                    "string.empty": classError.classError.emptyDescription,
-                    "string.required": classError.classError.emptyDescription
+                    "string.empty": classError.classError.classDescriptionEmpty,
+                    "string.required": classError.classError.classDescriptionEmpty
                 }),
-            tickets : Joi.array()
-                .optional()
+            ticket : Joi.string().hex().length(24)
+                .required()
+                .messages({
+                    "string.empty": classError.classError.classTicketEmpty,
+                    "string.required": classError.classError.classTicketEmpty
+                })
         })
     
         const { error } = formSchema.validate(req.body);

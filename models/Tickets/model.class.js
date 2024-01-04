@@ -7,10 +7,10 @@ const classSchema = new mongoose.Schema({
     description : {
         type : String
     },
-    tickets : [{
+    ticket : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Ticket'
-    }]
+    }
 })
 
 const Class = mongoose.model('Class', classSchema)

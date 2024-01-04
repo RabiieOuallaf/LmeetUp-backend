@@ -29,7 +29,7 @@ const ticketRouter = require('./routes/tickets/ticket.route')
 const couponRouter = require('./routes/tickets/coupon.route')
 const cityRouter = require('./routes/events/city.route')
 const revendeurRouter = require('./routes/users/routes.revendeur')
-
+const classRouter = require('./routes/tickets/class.route')
 app.use('/api/v1/superAdmin', superAdminRouter)
 app.use('/api/v1/user', usersRouter)
 app.use('/api/v1/event', eventRouter)
@@ -38,6 +38,7 @@ app.use('/api/v1/ticket', ticketRouter)
 app.use('/api/v1/coupon', couponRouter)
 app.use('/api/v1/city', cityRouter)
 app.use('/api/v1/revendeur', revendeurRouter)
+app.use('/api/v1/class', classRouter)
 
 const port = process.env.PORT || 3000
 http.listen(port, () => console.log('\x1b[32m%s\x1b[0m', `app is now listening at port ${port}`))
