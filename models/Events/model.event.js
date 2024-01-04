@@ -39,6 +39,10 @@ const eventSchema = new mongoose.Schema({
     videoUrl : {
         type : String 
     },
+    revendeur : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'Revendeur'
+    },
     city: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'City',

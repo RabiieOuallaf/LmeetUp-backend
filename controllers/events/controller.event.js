@@ -2,15 +2,12 @@ const Event = require("../../models/Events/model.event");
 const redisClient = require("../../utils/redisClient");
 const fs = require("fs");
 const path = require("path");
+const {
+  assignEventToRevendeur,
+} = require("../../controllers/users/controller.revendeur");
 
 exports.addEvent = async (req, res) => {
   try {
-    if (
-      !req.body.videoUrl.contains("https://www.youtube.com/") ||
-      !req.body.videoUrl.contains("https://youtu.be/")
-    )
-      return res.status(400).json({ error: "Invalid video url" });
-
     const eventData = {
       category: req.body.category,
       startTime: req.body.startTime,
@@ -48,7 +45,7 @@ exports.addEvent = async (req, res) => {
     }
     events.push(event);
 
-    await redisClient.setEx("events", 300, JSON.stringify(events));
+    await redisClient.set("events", JSON.stringify(events));
 
     res.status(201).json(event);
   } catch (error) {
@@ -107,9 +104,19 @@ exports.updateEvent = async (req, res) => {
       (event) => event._id.toString() !== req.params.id
     );
 
-    if (foundEvent.imageUrl) {
+    if (foundEvent.imageUrl && req.files["image"]) {
       const imagePath = path.join(__dirname, "..", "..", foundEvent.imageUrl);
       fs.unlinkSync(imagePath);
+    }
+
+    if (foundEvent.miniatureUrl && req.files["miniature"]) {
+      const miniaturePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        foundEvent.miniatureUrl
+      );
+      fs.unlinkSync(miniaturePath);
     }
 
     const eventData = {
@@ -136,7 +143,7 @@ exports.updateEvent = async (req, res) => {
 
     updatedEvents.push(updatedEvent);
 
-    await redisClient.setEx("events", 300, JSON.stringify(updatedEvents));
+    await redisClient.set("events", JSON.stringify(updatedEvents));
     return res.json({ updatedEvent });
   } catch (error) {
     console.error("Error in updateEvent:", error);
@@ -150,17 +157,27 @@ exports.getAllEvents = async (req, res) => {
   try {
     redisClient.connect();
 
-    const cachedEvents = await redisClient.get("events");
+    const page = req.query.page || 1;
+    const pageSize = 10;
+    const skip = (page - 1) * pageSize;
+    const cacheKey = `events:${page}`;
+
+    const cachedEvents = await redisClient.get(cacheKey);
     if (cachedEvents) {
       res.json({ events: JSON.parse(cachedEvents) });
       return;
     }
 
-    const events = await Event.find().populate("category").exec();
-
+    const events = await Event.find()
+      .populate("category")
+      .populate("city")
+      .populate("revendeur")
+      .skip(skip)
+      .limit(pageSize)
+      .exec();
     if (events.length > 0) {
       res.json({ events });
-      await redisClient.setEx("events", 300, JSON.stringify(events)); // Cache the results
+      await redisClient.set("events", JSON.stringify(events)); // Cache the results
     } else {
       res.status(400).json({ error: "No events found" });
     }
@@ -184,11 +201,14 @@ exports.getOneEvent = async (req, res) => {
       return;
     }
 
-    const event = await Event.findById(eventId).populate("category").exec();
+    const event = await Event.find()
+      .populate("category")
+      .populate("city")
+      .exec();
 
     if (event) {
       res.json({ event });
-      await redisClient.setEx(`event:${eventId}`, 300, JSON.stringify(event));
+      await redisClient.set(`event:${eventId}`, JSON.stringify(event));
     } else {
       res.status(400).json({ error: "No event found" });
     }
@@ -200,7 +220,7 @@ exports.getOneEvent = async (req, res) => {
   }
 };
 
-exports.deleteEvent = async (req, res) => {
+exports.deleteEvent = async (req, res, next) => {
   let eventId = req.params.id;
   try {
     const foundEvent = await Event.findById(eventId);
@@ -210,6 +230,24 @@ exports.deleteEvent = async (req, res) => {
       await foundEvent.deleteOne();
       await redisClient.del(`event:${eventId}`);
 
+      if (foundEvent.imageUrl) {
+        const imagePath = path.join(__dirname, "..", "..", foundEvent.imageUrl);
+
+        if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+         
+      }
+
+      if (foundEvent.miniatureUrl) {
+        const miniaturePath = path.join(
+          __dirname,
+          "..",
+          "..",
+          foundEvent.miniatureUrl
+        );
+
+        if (fs.existsSync(miniaturePath)) fs.unlinkSync(miniaturePath);
+
+      }
       res.status(204).json({ warning: "Event is deleted" });
     } else {
       res.status(400).json({ error: "Event not found" });
@@ -218,5 +256,66 @@ exports.deleteEvent = async (req, res) => {
     res.status(400).json({ error: error.message });
   } finally {
     await redisClient.quit();
+    next()
+  }
+};
+
+exports.assignRevendeurToEvent = async (req, res, next) => {
+  try {
+    let eventId = req.body.eventId;
+    let revendeurId = req.body.revendeurId;
+
+    const foundEvent = await Event.findById(eventId);
+
+    if (!foundEvent) {
+      return res
+        .status(400)
+        .json({
+          error: "You're trying to assign revendeur to a non-existing event",
+        });
+    }
+
+    const assignEventToRevendeurResult = await assignEventToRevendeur(
+      eventId,
+      revendeurId
+    );
+
+    if (assignEventToRevendeurResult.error) {
+      return res
+        .status(400)
+        .json({ error: assignEventToRevendeurResult.error });
+    }
+
+    if (revendeurId) {
+      foundEvent.revendeur = revendeurId;
+      
+      const updatedEvent = await foundEvent.save();
+      redisClient.connect();
+      let cachedEvents = await redisClient.get("events");
+      cachedEvents = cachedEvents ? JSON.parse(cachedEvents) : [];
+
+      if (!Array.isArray(cachedEvents)) {
+        cachedEvents = [];
+      }
+
+      cachedEvents.push(updatedEvent);
+
+      redisClient.set("event", JSON.stringify(updatedEvent));
+      return res.status(200).json(updatedEvent);
+    }
+    return res.status(400).json({ error: "select a revendeur" });
+  } catch (error) {
+    console.error("Error in revendeur assigning");
+    next(error);
+  } finally {
+    try {
+      const pong = await redisClient.ping();
+      if (pong === 'PONG') {
+        // Only close the client if you are done using it
+        await redisClient.quit();
+      }
+    } catch (error) {
+      console.error("Redis client is not connected");
+    }
   }
 };

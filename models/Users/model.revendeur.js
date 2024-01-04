@@ -31,10 +31,10 @@ const revendeurSchema = new mongoose.Schema({
     identityDocumentNumber : {
         type : String,
     },
-    event : {
+    events : [{
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Event'
-    }
+    }]
 
     
 },{timestamps: true})
