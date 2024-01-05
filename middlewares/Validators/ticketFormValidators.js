@@ -4,7 +4,7 @@ const Joi = require('joi')
 function formValidation(req, res, next) {
     const formSchema = Joi.object({
     
-        seatClass: Joi.string()
+        seatClasses: Joi.array()
             .required(),
         quantityTotal: Joi.number()
             .required(),

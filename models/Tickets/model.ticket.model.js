@@ -3,10 +3,18 @@ const SeatTypeEnum = require('../../enums/enum.SeatTypes')
 
 const ticketSchema = new mongoose.Schema({
     
-    seatClass: {
-        type: String,
-        enum: Object.values(SeatTypeEnum),
-    },
+    seatClasses: [
+        { 
+            seatClassId : {
+                type : String,
+                ref : "Class"
+            },
+            seatClassQuantity : {
+                type : Number,
+            }
+
+        }]
+    ,
     quantityTotal: {
         type: Number,
     },
@@ -39,6 +47,9 @@ const ticketSchema = new mongoose.Schema({
             },
             seatAvailability : {
                 type : Boolean
+            },
+            seatClass : {
+                type : String
             }
         }
     

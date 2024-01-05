@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const { formValidation } = require('../../middlewares/Validators/classFormValidator')
-const { addClass, updateClass, getAllClasses, getOneClass, deleteClass } = require('../../controllers/tickets/controller.class')
+const { addClass, updateClass, getAllClasses, getOneClass, deleteClass, getTicketClasses } = require('../../controllers/tickets/controller.class')
 const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/auth')
 
 
@@ -11,6 +11,7 @@ router.put('/update/:id', formValidation, updateClass)
 
 router.get('/getAll' ,getAllClasses)
 router.get('/get/:id' ,getOneClass)
+router.get('/getTicketClasses/:id', getTicketClasses);
 
 router.delete('/delete/:id', deleteClass);
 

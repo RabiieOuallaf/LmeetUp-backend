@@ -119,6 +119,25 @@ exports.getAllClasses = async (req, res) => {
     }
 }
 
+exports.getTicketClasses = async (req, res) => {
+    try {
+        let ticketId = req.params.id
+
+        if (ticketId && ticketId.length === 24) {
+            let foundTicketClasses = await Class.find({ ticket: ticketId }).populate('ticket')
+            return res.json({ foundTicketClasses })
+        } {
+            return res.status(404).json({ error: 'Ticket not found' })
+        }
+
+
+    } catch {
+        console.error('Error getting ticket classes:', error)
+        res.status(400).json({ error })
+    
+    }
+}
+
 exports.deleteClass = async (req, res) => {
     try {
         const deletedClass = await Class.findByIdAndDelete(req.params.id)

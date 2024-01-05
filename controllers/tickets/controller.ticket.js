@@ -4,31 +4,44 @@ const redisClient = require('../../utils/redisClient');
 
 exports.addTicket = async (req, res) => {
     try {
-        const { quantityTotal, quantityOnline, quantityOffline } = req.body;
+        const { seatClasses } = req.body;
 
-        if (quantityTotal < quantityOnline + quantityOffline) {
-            return res.status(400).json({ error: "Sum of quantityOnline and quantityOffline cannot exceed quantityTotal" });
+        const seats = [];
+        let totalQuantity = 0;
+
+        // Generate seats for each seat class based on online and offline quantities
+        for (const classData of seatClasses) {
+            const onlineSeats = classData.onlineSeat;
+            const offlineSeats = classData.offlineSeat;
+            const totalSeats = onlineSeats + offlineSeats;
+
+            totalQuantity += totalSeats;
+
+            for (let i = 1; i <= totalSeats; i++) {
+                const seatId = `Seat-${seats.length + 1}`;
+                const isOnline = i <= onlineSeats;
+                const isOffline = !isOnline;
+                const seatAvailability = isOnline || isOffline;
+
+                seats.push({
+                    seatId,
+                    seatSource: isOnline ? 'online' : 'offline',
+                    seatAvailability,
+                    seatClass: classData.seatClassId,
+                });
+            }
         }
 
-        const seats = Array.from({ length: quantityTotal }, (_, index) => {
-            const seatNumber = index + 1;
-            const seatId = `Seat-${seatNumber}`;
-            const isOnline = seatNumber <= quantityOnline;
-            const isOffline = seatNumber > quantityOnline && seatNumber <= quantityOnline + quantityOffline;
-            const seatAvailability = isOnline || isOffline;
+        const { quantityTotal } = req.body;
 
-            return {
-                seatId,
-                seatSource: isOnline ? 'online' : 'offline',
-                seatAvailability,
-            };
-        });
+        if (quantityTotal !== totalQuantity) {
+            return res.status(400).json({ error: "Total quantity specified for seat classes must match quantityTotal" });
+        }
 
         const ticket = {
             ...req.body,
             seats,
         };
-
 
         const savedTicket = await new Ticket(ticket).save();
 
@@ -48,9 +61,12 @@ exports.addTicket = async (req, res) => {
         console.error('Error adding ticket:', error);
         res.status(400).json({ error });
     } finally {
-        await redisClient.quit();
+        const pong = redisClient.ping();
+        if (pong === 'PONG') await redisClient.quit();
     }
 };
+
+
 
 
 

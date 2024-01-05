@@ -9,7 +9,6 @@ router.put('/update/:id', formValidation, updateTicket);
 
 router.get('/getAll', getAllTickets);
 router.get('/get/:id', getOneTicket);
-
 router.delete('/delete/:id', deleteTicket);
 
 module.exports = router;
