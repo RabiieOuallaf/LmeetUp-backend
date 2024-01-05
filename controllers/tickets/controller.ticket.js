@@ -9,7 +9,6 @@ exports.addTicket = async (req, res) => {
         const seats = [];
         let totalQuantity = 0;
 
-        // Generate seats for each seat class based on online and offline quantities
         for (const classData of seatClasses) {
             const onlineSeats = classData.onlineSeat;
             const offlineSeats = classData.offlineSeat;
@@ -66,10 +65,6 @@ exports.addTicket = async (req, res) => {
     }
 };
 
-
-
-
-
 exports.updateTicket = async (req, res) => {
     try {
         const foundTicket = await Ticket.findById(req.params.id);
@@ -82,7 +77,31 @@ exports.updateTicket = async (req, res) => {
 
         updatedTickets = updatedTickets.filter(ticket => ticket._id.toString() !== req.params.id);
 
-        Object.assign(foundTicket, req.body);
+        const seatClasses = req.body.seatClasses || [];
+
+        // Update seats based on seatClasses
+        const seats = [];
+        seatClasses.forEach(seatClass => {
+            const { seatClassId, seatClassQuantity, onlineSeat, offlineSeat } = seatClass;
+            const totalSeats = onlineSeat + offlineSeat;
+            for (let i = 0; i < totalSeats; i++) {
+                const seatId = `Seat-${i + 1}`;
+                const seatSource = i < onlineSeat ? 'online' : 'offline';
+                seats.push({
+                    seatId,
+                    seatSource,
+                    seatAvailability: true,
+                    seatClass: seatClassId,
+                });
+            }
+        });
+
+        const updatedTicketData = {
+            ...req.body,
+            seats,
+        };
+
+        Object.assign(foundTicket, updatedTicketData);
         const updatedTicket = await foundTicket.save();
 
         updatedTickets.push(updatedTicket);
@@ -97,7 +116,6 @@ exports.updateTicket = async (req, res) => {
         await redisClient.quit();
     }
 };
-
 
 exports.getAllTickets = async (req, res) => {
     try {
@@ -116,15 +134,15 @@ exports.getAllTickets = async (req, res) => {
     } finally {
         await redisClient.quit();
     }
-}
+};
 
 exports.getOneTicket = async (req, res) => {
     try {
         redisClient.connect();
-        let ticket = await redisClient.get('ticket');
+        let ticket = await redisClient.get(`ticket:${req.params.id}`);
         if (!ticket) {
             ticket = await Ticket.findById(req.params.id);
-            await redisClient.setEx('ticket', 5400, JSON.stringify(ticket));
+            await redisClient.setEx(`ticket:${req.params.id}`, 5400, JSON.stringify(ticket));
         } else {
             ticket = JSON.parse(ticket);
         }
@@ -135,7 +153,7 @@ exports.getOneTicket = async (req, res) => {
     } finally {
         await redisClient.quit();
     }
-}
+};
 
 exports.deleteTicket = async (req, res) => {
     try {
@@ -160,3 +178,4 @@ exports.deleteTicket = async (req, res) => {
         await redisClient.quit();
     }
 };
+
