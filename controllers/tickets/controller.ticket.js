@@ -4,47 +4,12 @@ const redisClient = require('../../utils/redisClient');
 
 exports.addTicket = async (req, res) => {
     try {
-        const { seatClasses } = req.body;
-
-        const seats = [];
-        let totalQuantity = 0;
-
-        for (const classData of seatClasses) {
-            const onlineSeats = classData.onlineSeat;
-            const offlineSeats = classData.offlineSeat;
-            const totalSeats = onlineSeats + offlineSeats;
-
-            totalQuantity += totalSeats;
-
-            for (let i = 1; i <= totalSeats; i++) {
-                const seatId = `Seat-${seats.length + 1}`;
-                const isOnline = i <= onlineSeats;
-                const isOffline = !isOnline;
-                const seatAvailability = isOnline || isOffline;
-
-                seats.push({
-                    seatId,
-                    seatSource: isOnline ? 'online' : 'offline',
-                    seatAvailability,
-                    seatClass: classData.seatClassId,
-                });
-            }
-        }
-
-        const { quantityTotal } = req.body;
-
-        if (quantityTotal !== totalQuantity) {
-            return res.status(400).json({ error: "Total quantity specified for seat classes must match quantityTotal" });
-        }
-
         const ticket = {
             ...req.body,
-            seats,
-        };
-
+        }
         const savedTicket = await new Ticket(ticket).save();
 
-        redisClient.connect();
+        redisClient.connect()
         let cachedTickets = await redisClient.get('tickets');
         cachedTickets = cachedTickets ? JSON.parse(cachedTickets) : [];
 
@@ -53,21 +18,25 @@ exports.addTicket = async (req, res) => {
         }
         cachedTickets.push(savedTicket);
 
-        await redisClient.setEx('tickets', 5400, JSON.stringify(cachedTickets));
+        await redisClient.set('tickets', JSON.stringify(cachedTickets));
 
         res.status(201).json(savedTicket);
     } catch (error) {
         console.error('Error adding ticket:', error);
         res.status(400).json({ error });
     } finally {
-        const pong = redisClient.ping();
+        const pong = await redisClient.ping();
         if (pong === 'PONG') await redisClient.quit();
     }
 };
 
+
+
+
 exports.updateTicket = async (req, res) => {
     try {
-        const foundTicket = await Ticket.findById(req.params.id);
+        let ticketId = req.params.id;
+        const foundTicket = await Ticket.findById(ticketId);
         if (!foundTicket) return res.status(404).json({ error: "Ticket not found" });
 
         redisClient.connect();
@@ -75,7 +44,7 @@ exports.updateTicket = async (req, res) => {
         const tickets = await redisClient.get('tickets');
         let updatedTickets = tickets ? JSON.parse(tickets) : [];
 
-        updatedTickets = updatedTickets.filter(ticket => ticket._id.toString() !== req.params.id);
+        updatedTickets = updatedTickets.filter(ticket => ticket._id.toString() !== ticketId);
 
         const seatClasses = req.body.seatClasses || [];
 
@@ -106,7 +75,7 @@ exports.updateTicket = async (req, res) => {
 
         updatedTickets.push(updatedTicket);
 
-        await redisClient.setEx('tickets', 5400, JSON.stringify(updatedTickets));
+        await redisClient.set('tickets', JSON.stringify(updatedTickets));
 
         res.json({ updatedTicket });
     } catch (error) {
@@ -120,10 +89,11 @@ exports.updateTicket = async (req, res) => {
 exports.getAllTickets = async (req, res) => {
     try {
         redisClient.connect();
-        let tickets = await redisClient.get('tickets');
-        if (!tickets) {
-            tickets = await Ticket.find();
-            await redisClient.setEx('tickets', 5400, JSON.stringify(tickets));
+        let cachedTickets = await redisClient.get('cachedTickets');
+        let tickets;
+        if (!cachedTickets) {
+            tickets = await Ticket.find().populate('event').populate('seatClasses.seatClassId');            
+            await redisClient.set('tickets', JSON.stringify(tickets));
         } else {
             tickets = JSON.parse(tickets);
         }
@@ -138,11 +108,12 @@ exports.getAllTickets = async (req, res) => {
 
 exports.getOneTicket = async (req, res) => {
     try {
+        let ticketId = req.params.id;
         redisClient.connect();
-        let ticket = await redisClient.get(`ticket:${req.params.id}`);
+        let ticket = await redisClient.get(`ticket:${ticketId}`);
         if (!ticket) {
-            ticket = await Ticket.findById(req.params.id);
-            await redisClient.setEx(`ticket:${req.params.id}`, 5400, JSON.stringify(ticket));
+            ticket = await Ticket.findById(ticketId).populate('event').populate('seatClasses.seatClassId');
+            await redisClient.set(`ticket:${req.params.id}`, JSON.stringify(ticket));
         } else {
             ticket = JSON.parse(ticket);
         }
@@ -157,7 +128,8 @@ exports.getOneTicket = async (req, res) => {
 
 exports.deleteTicket = async (req, res) => {
     try {
-        const deletedTicket = await Ticket.findByIdAndDelete(req.params.id);
+        let ticketId = req.params.id;
+        const deletedTicket = await Ticket.findByIdAndDelete(ticketId);
         if (!deletedTicket) {
             return res.status(404).json({ error: "Ticket not found" });
         }
@@ -166,9 +138,9 @@ exports.deleteTicket = async (req, res) => {
         const cachedTickets = await redisClient.get('tickets');
         let updatedTickets = cachedTickets ? JSON.parse(cachedTickets) : [];
         
-        updatedTickets = updatedTickets.filter(ticket => ticket._id.toString() !== req.params.id);
+        updatedTickets = updatedTickets.filter(ticket => ticket._id.toString() !== ticketId);
         
-        await redisClient.setEx('tickets', 5400, JSON.stringify(updatedTickets));
+        await redisClient.set('tickets', JSON.stringify(updatedTickets));
 
         return res.json({ deletedTicket });
     } catch (error) {

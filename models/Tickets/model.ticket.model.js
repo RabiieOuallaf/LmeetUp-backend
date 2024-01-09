@@ -1,60 +1,21 @@
 const mongoose = require('mongoose');
-const SeatTypeEnum = require('../../enums/enum.SeatTypes')
-
 const ticketSchema = new mongoose.Schema({
-    
-    seatClasses: [
-        { 
-            seatClassId : {
-                type : String,
-                ref : "Class"
-            },
-            seatClassQuantity : {
-                type : Number,
-            }
-
-        }]
-    ,
-    quantityTotal: {
-        type: Number,
-    },
-    quantityOnline: {
-        type: Number,
-    },
-    quantityOffline: {
-        type: Number,
-    },
-    price: {
-        type: Number,
+    class: {
+        type : String,
+        ref : 'Class'
     },
     event: {
-        // type: mongoose.Schema.Types.ObjectId,
-        // ref: 'Event',
-        type : String
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event',
     },
     coupon : {
-        // type: mongoose.Schema.Types.ObjectId,
-        // ref: 'Coupon',
-        type : String
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Coupon',
     },
-    seats : [
-        {
-            seatId : {
-                type : String
-            },
-            seatSource : {
-                type : String
-            },
-            seatAvailability : {
-                type : Boolean
-            },
-            seatClass : {
-                type : String
-            }
-        }
-    
-    ]
-});
+    price : {
+        type : Number,
+    }
+}, { timestamps: true });
 
 const Ticket = mongoose.model('Ticket', ticketSchema);
 

@@ -1,23 +1,15 @@
-const ticketError = require('../../errors/error.ticket')
 const Joi = require('joi')
 
 function formValidation(req, res, next) {
     const formSchema = Joi.object({
     
-        seatClasses: Joi.array()
+        class: Joi.string().hex().length(24)
             .required(),
-        quantityTotal: Joi.number()
+        event: Joi.string().hex().length(24)
             .required(),
-        quantityOnline: Joi.number()
+        coupon: Joi.string().hex().length(24)
             .required(),
-        quantityOffline: Joi.number()
-            .required(),
-        price: Joi.number()
-            .required(),
-        event: Joi.string()
-            .required(),
-        coupon: Joi.string()
-            .required()
+        price: Joi.number().required()
     });
         
 

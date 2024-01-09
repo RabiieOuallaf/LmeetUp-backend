@@ -6,5 +6,7 @@ exports.eventError = {
     imageUrl : "Veuillez entrer event image ",
     miniatureUrl : "Veuillez entrer event miniature ",
     city : "Veuillez entrer ville",
-    videoUrl : "Veuillez entrer videoUrl"
+    videoUrl : "Veuillez entrer videoUrl",
+    emptyDate : "Veuillez entrer une date",
+    localisation : "Veuillez entrer une localisation"
 }

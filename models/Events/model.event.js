@@ -1,57 +1,72 @@
-const mongoose = require('mongoose');
-const seatType = require('../../enums/enum.SeatTypes');
-const eventSchema = new mongoose.Schema({
+const mongoose = require("mongoose");
+const eventSchema = new mongoose.Schema(
+  {
     title: {
-        type: String,
-        default: 'Sans titre',
+      type: String,
+      default: "Sans titre",
     },
     description: {
-        type: String,
-        default: 'Sans description',
+      type: String,
+      default: "Sans description",
     },
-    eventClass: {
+    tickets: [
+      {
         type: String,
-        default: null,
+        ref: "Ticket",
+      },
+    ],
+    totalTickets: {
+      type: Number,
+      default: 0,
+    },
+    totalTicketOnline: {
+      type: Number,
+      default: 0,
+    },
+    totalTicketOffline: {
+      type: Number,
+      default: 0,
     },
     category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
     },
     startTime: {
-        type: Date,
+      type: String,
     },
     endTime: {
-
-        type: Date,
+      type: String,
     },
-    turnOver: { // Chiffre d'affaire
-        type: Number,
+    turnOver: {
+      // Chiffre d'affaire
+      type: Number,
     },
     totalTickets: {
-        type: Number,
+      type: Number,
     },
     imageUrl: {
-        type: String,
+      type: String,
     },
-    miniatureUrl : {
-        type : String
+    miniatureUrl: {
+      type: String,
     },
-    videoUrl : {
-        type : String 
+    videoUrl: {
+      type: String,
     },
-    revendeur : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : 'Revendeur'
+    revendeur: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Revendeur",
     },
     city: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'City',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "City",
     },
     eventPlan: {
-        type: String,
-    }
-}, { timestamps: true });
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
 
-const Event = mongoose.model('Event', eventSchema);
-
+const Event = mongoose.model("Event", eventSchema);
 module.exports = Event;

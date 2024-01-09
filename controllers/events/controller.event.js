@@ -9,17 +9,12 @@ const {
 exports.addEvent = async (req, res) => {
   try {
     const eventData = {
-      category: req.body.category,
-      startTime: req.body.startTime,
-      endTime: req.body.endTime,
-      turnOver: req.body.turnOver,
-      totalTickets: req.body.totalTickets,
+      ...req.body,
       imageUrl: req.files["image"] ? req.files["image"][0].path : "",
       miniatureUrl: req.files["miniature"]
         ? req.files["miniature"][0].path
         : "",
-      videoUrl: req.body.videoUrl,
-      city: req.body.city,
+     
     };
 
     const event = await new Event(eventData).save();
@@ -65,7 +60,7 @@ exports.advancedAddEvent = async (req, res, next) => {
     }
     foundEvent.title = req.body.title || foundEvent.title;
     foundEvent.description = req.body.description || foundEvent.description;
-    foundEvent.eventClass = req.body.eventClass || foundEvent.eventClass;
+    foundEvent.ticket = req.body.ticket || foundEvent.ticket;
 
     const updatedEvent = await foundEvent.save();
 
@@ -120,22 +115,14 @@ exports.updateEvent = async (req, res) => {
     }
 
     const eventData = {
-      category: req.body.category || foundEvent.category,
-      startTime: req.body.startTime || foundEvent.startTime,
-      endTime: req.body.endTime || foundEvent.endTime,
-      turnOver: req.body.turnOver || foundEvent.turnOver,
-      totalTickets: req.body.totalTickets || foundEvent.totalTickets,
+      ...req.body,
       imageUrl: req.files["image"]
         ? req.files["image"][0].path
         : foundEvent.imageUrl,
       miniatureUrl: req.files["miniature"]
         ? req.files["miniature"][0].path
         : foundEvent.miniatureUrl,
-      videoUrl: req.body.videoUrl || foundEvent.videoUrl,
-      city: req.body.city || foundEvent.city,
-      title: req.body.title || foundEvent.title,
-      description: req.body.description || foundEvent.description,
-      eventClass: req.body.eventClass || foundEvent.eventClass,
+      
     };
 
     Object.assign(foundEvent, eventData);
@@ -195,15 +182,16 @@ exports.getOneEvent = async (req, res) => {
 
     redisClient.connect();
 
-    const cachedEvents = await redisClient.get(`event:${eventId}`);
+    const cachedEvents = await redisClient.get(`events:${eventId}`);
     if (cachedEvents) {
       res.json({ events: JSON.parse(cachedEvents) });
       return;
     }
 
-    const event = await Event.find()
+    const event = await Event.findById(eventId)
       .populate("category")
       .populate("city")
+      .populate("ticket")
       .exec();
 
     if (event) {
@@ -269,7 +257,7 @@ exports.assignRevendeurToEvent = async (req, res, next) => {
 
     if (!foundEvent) {
       return res
-        .status(400)
+        .status(404)
         .json({
           error: "You're trying to assign revendeur to a non-existing event",
         });
@@ -311,7 +299,6 @@ exports.assignRevendeurToEvent = async (req, res, next) => {
     try {
       const pong = await redisClient.ping();
       if (pong === 'PONG') {
-        // Only close the client if you are done using it
         await redisClient.quit();
       }
     } catch (error) {
