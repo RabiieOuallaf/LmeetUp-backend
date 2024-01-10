@@ -10,7 +10,6 @@ function formValidation(req, res, next) {
             .required()
             .pattern(new RegExp(emailRegex))
             .messages({
-                "string.pattern.base": superAdminErrors.superAdminError.email,
                 "string.empty": superAdminErrors.superAdminError.emptyEmail,
                 "string.required": superAdminErrors.superAdminError.emptyEmail
             })

@@ -3,16 +3,17 @@ let userErrors = require('../../errors/errors.user')
 const jwt = require('jsonwebtoken')
 const fs = require('fs');
 const { generateSaltedHash } = require('../../utils/generateHash')
+const {encryptData} = require('../../utils/encryptionUtil')
 
 exports.signup = async (req, res) => {
     try {
         if(req.body.confirmPassword !== req.body.password || !req.body.confirmPassword)
             return res.status('400').json({error: userErrors.userError.passwordAndConfirmPasswordIsMatch})
 
-        const user = new User(req.body)
-        await user.save()
+        const createdUserModel = new User(req.body)
+        await createdUserModel.save()
 
-        res.json(user)
+        res.json(createdUserModel)
     }
     catch(error) {
         console.log(error)
@@ -36,39 +37,77 @@ exports.CheckIfEmailIsExist = async (req, res, next) => {
 
 exports.signin = async (req, res) => {
     try {
-        const Query = await User.findOne({email: req.body.email})
-        if(!Query)
-            return res.status(404).json({error: userErrors.userError.checkThisEmailIfNotExist})
+      const foundUser = await User.findOne({ email: req.body.email });
 
-            const hashedPassword = await generateSaltedHash(req.body.password, Query.password.salt, Query.password.uuid)
-
-            if(hashedPassword.hash !== Query.password.hash)
-                return res.status(401).json({error: userErrors.userError.invalidUserPassword})
-
-            // expire after 1 hours exp: Math.floor(Date.now() / 1000) + (60 * 60)
-            const certPath = process.env.PRIVATE_KEY_PATH;
-            try {
-                const cert = fs.readFileSync(certPath);
-                const token = jwt.sign(
-                    { _id: Query._id, exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) },
-                    cert,
-                    { algorithm: 'RS512' }
-                );
-    
-                Query.password = undefined;
-
-                res.cookie('token', token, { expire: Math.floor(Date.now() / 1000) + (24 * 60 * 60) })
-                res.cookie('user_id', Query._id)
-
-                res.json({ userInfo: Query, token: token });
-            } catch (readError) {
-                res.status(500).json({ error: userErrors.userError.invalidCert });
-            }
+      if (!foundUser) {
+        return res.status(404).json({
+          error: userErrors.userError.checkThisEmailIfNotExist,
+        });
+      }
+      
+      const hashedPassword = await generateSaltedHash(
+        req.body.password,
+        foundUser.password.salt,
+        foundUser.password.uuid
+      );
+      if (hashedPassword.hash !== foundUser.password.hash) {
+        return res.status(401).json({
+          error: userErrors.userError.invalidUserPassword,
+        });
+      }
+  
+      const certPath = process.env.PRIVATE_KEY_PATH;
+      try {
+        const cert = fs.readFileSync(certPath);
+  
+        const accessToken = jwt.sign(
+          { _id: foundUser._id, exp: Math.floor(Date.now() / 1000) + 3 * 60 * 60 },
+          cert,
+          { algorithm: "RS512" }
+        );
+  
+        const refreshToken = jwt.sign(
+          { _id: foundUser._id, exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60 },
+          cert,
+          { algorithm: "RS512" }
+        );
+  
+        const encryptedAccessToken = encryptData(accessToken);
+        const encryptedRefreshToken = encryptData(refreshToken);
+  
+        foundUser.password = undefined;
+  
+        res.cookie("token", encryptedAccessToken, {
+          sameSite: "strict",
+          secure: process.env.NODE_ENV === "production",
+        });
+  
+        res.cookie("refreshToken", encryptedRefreshToken, {
+          sameSite: "strict",
+          secure: process.env.NODE_ENV === "production",
+        });
+  
+        res.cookie("user_id", foundUser._id);
+  
+        res.json({
+          userInfo: foundUser,
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken,
+        });
+      } catch (readError) {
+        console.error(readError); // Log the error for debugging
+        res.status(500).json({
+          error: userErrors.userError.invalidCert,
+        });
+      }
+    } catch (error) {
+      console.error(error); // Log the error for debugging
+      res.status(500).json({
+        error: "Internal Server Error",
+      });
     }
-    catch(error) {
-
-    }
-}
+  };
+  
 
 exports.getOneAdmin = async (req, res) => {
     res.json(req.userInfo)

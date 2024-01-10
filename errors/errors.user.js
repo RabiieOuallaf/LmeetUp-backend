@@ -1,6 +1,12 @@
 exports.userError = {
+    emptyFirstName: "Veuillez entrer votre prénom",
+    emptyLastName: "Veuillez entrer votre nom",
+    emptyPhoneNumber: "Veuillez entrer votre numéro de téléphone",
     emptyEmail: "Veuillez entrer votre Email",
+    emptyIdentityDocumentNumber: "Veuillez entrer votre numéro de document d'identité",
     emptyPassword: "Veuillez entrer votre mot de passe",
+    emptyCity : "Veuillez entrer votre ville",
+    emptyBirthDate : "Veuillez entrer votre date de naissance",
     email: "Veuilez entrer une adress e-mail correcte",
     isAuth: "Accès refusé",
     isUser: "Admin Resource, Accès refusé !",

@@ -38,14 +38,14 @@ exports.CheckIfEmailIsExist = async (req, res, next) => {
 
 exports.signIn = async (req, res) => {
     try {
-        const Query = await SuperadminModel.findOne({email: req.body.email})
-        if(!Query){
+        const foundSuperAdmin = await SuperadminModel.findOne({email: req.body.email})
+        if(!foundSuperAdmin){
             return res.status(404).json({error: superAdminErrors.superAdminError.checkThisEmailIfNotExist})
         }
 
-        const hashedPassword = await generateSaltedHash(req.body.password, Query.password.salt, Query.password.uuid)
+        const hashedPassword = await generateSaltedHash(req.body.password, foundSuperAdmin.password.salt, foundSuperAdmin.password.uuid)
 
-        if(hashedPassword.hash !== Query.password.hash){
+        if(hashedPassword.hash !== foundSuperAdmin.password.hash){
             return res.status(401).json({error: superAdminErrors.superAdminError.invalidUserPassword})
         }
 
@@ -55,20 +55,20 @@ exports.signIn = async (req, res) => {
 
             const cert = fs.readFileSync(certPath);
             const accessToken = jwt.sign(
-                { _id: Query._id, exp: Math.floor(Date.now() / 1000) + (3 * 60 * 60) },
+                { _id: foundSuperAdmin._id, exp: Math.floor(Date.now() / 1000) + (3 * 60 * 60) },
                 cert,   
                 { algorithm: 'RS512' }
             )
 
             const refreshToken = jwt.sign(
-                { _id: Query._id, exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) },
+                { _id: foundSuperAdmin._id, exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) },
                 cert,
                 { algorithm: 'RS512' }
             )
-            // generate secret hash to use as encryption key
+
             let encryptedAccessToken = encryptData(accessToken)
             let encryptedRefreshToken = encryptData(refreshToken)
-            Query.password = undefined;
+            foundSuperAdmin.password = undefined;
             
             res.
             cookie('accessToken', encryptedAccessToken, 
@@ -87,10 +87,10 @@ exports.signIn = async (req, res) => {
                 }
             )
             res.
-            cookie('user_id', Query._id)
+            cookie('user_id', foundSuperAdmin._id)
 
             res.
-            json({ userInfo: Query , accessToken: encryptedAccessToken, refreshToken: encryptedRefreshToken});
+            json({ userInfo: foundSuperAdmin , accessToken: encryptedAccessToken, refreshToken: encryptedRefreshToken});
 
 
         } catch (readError) {
@@ -105,7 +105,6 @@ exports.signIn = async (req, res) => {
 exports.refreshToken = async (req, res, next) => {
         const jwtRefreshToken = req.refreshToken
 
-        console.log(jwtRefreshToken)
 
         if(!jwtRefreshToken)
             return res.status(401).json({error: superAdminErrors.superAdminError.Unauthorized})
@@ -117,7 +116,7 @@ exports.refreshToken = async (req, res, next) => {
             const cert = fs.readFileSync(certPathPublic)
 
             const newAccessToken = jwt.sign(
-                { _id: req.params.adminID, exp: Math.floor(Date.now() / 1000) + (3 * 60 * 60) },
+                { _id: req.params.adminID, exp: Math.floor(Date.now() / 1000) + (1 * 60) },
                 cert,
                 { algorithm: 'RS512' }
             )
@@ -134,14 +133,14 @@ exports.refreshToken = async (req, res, next) => {
             res.
             cookie('accessToken', encryptedAccessToken, 
                 { 
-                    maxAge: 3 * 60 * 60 * 1000,
+                    maxAge: 1 * 60 * 1000,
                     sameSite: 'strict', // Prevent CSRF attacks 
                     secure: process.env.NODE_ENV === 'production', // Prevent http interception in production 
                 }
             )
 
             res.cookie('refreshToken', encryptedRefreshToken,
-                {
+                {   
                     maxAge: 24 * 60 * 60 * 1000,
                     sameSite: 'strict',
                     secure: process.env.NODE_ENV === 'production',
