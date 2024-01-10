@@ -3,7 +3,7 @@ const router = express.Router()
 
 const { formValidation } = require('../../middlewares/Validators/classFormValidator')
 const { addClass, updateClass, getAllClasses, getOneClass, deleteClass, getTicketClasses } = require('../../controllers/tickets/controller.class')
-const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/auth')
+const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/superAdminAuth')
 
 
 router.post('/add',  formValidation, addClass)

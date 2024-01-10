@@ -9,7 +9,7 @@ const { decryptData, encryptData } = require("../../utils/encryptionUtil");
 exports.verifyAuthHeaderToken = async (req, res, next) => {
   const encryptedAccessToken = req.headers["authorization"];
   const encryptedRefreshToken = req.cookies.refreshToken;
-  
+
   if (!encryptedAccessToken) {
     return res.status(401).json({ error: superAdminErrors.superAdminError.Unauthorized });
   }
@@ -19,12 +19,12 @@ exports.verifyAuthHeaderToken = async (req, res, next) => {
     const decryptedAccessToken = decryptData(encryptedAccessTokenWithoutBearer);
     const cert = fs.readFileSync(process.env.PUBLIC_KEY_PATH);
 
-    let user;
+    let superAdmin;
 
     try {
-      user = jwt.verify(decryptedAccessToken, cert, { algorithms: ["RS512"] });
+      superAdmin = jwt.verify(decryptedAccessToken, cert, { algorithms: ["RS512"] });
     } catch (err) {
-      // Token verification failed
+
       if (!encryptedRefreshToken) {
         return res.status(401).json({ error: superAdminErrors.superAdminError.Unauthorized });
       }
@@ -35,7 +35,6 @@ exports.verifyAuthHeaderToken = async (req, res, next) => {
         return res.status(401).json({ error: superAdminErrors.superAdminError.Unauthorized });
       }
 
-      // Refresh the token
       const adminID = req.params.id;
       const certPathPrivate = process.env.PRIVATE_KEY_PATH;
       const certPrivate = fs.readFileSync(certPathPrivate);
@@ -60,7 +59,6 @@ exports.verifyAuthHeaderToken = async (req, res, next) => {
       let encryptedNewAccessToken = encryptData(newAccessToken);
       let encryptedNewRefreshToken = encryptData(newRefreshToken);
 
-      // Set the new tokens
       res.cookie('accessToken', encryptedNewAccessToken, {
         maxAge: 3 * 60 * 60 * 1000,
         sameSite: 'strict',
@@ -73,52 +71,15 @@ exports.verifyAuthHeaderToken = async (req, res, next) => {
         secure: process.env.NODE_ENV === 'production',
       });
 
-      user = jwt.verify(newAccessToken, cert, { algorithms: ["RS512"] });
+      superAdmin = jwt.verify(newAccessToken, cert, { algorithms: ["RS512"] });
     }
 
-    req.user = user;
+    req.superAdmin = superAdmin;
     next();
   } catch (err) {
     return res.status(401).json({ error: superAdminErrors.superAdminError.Unauthorized });
   }
 }
-
-
-
-exports.verifyCookieToken = (req, res, next) => {
-  const jwtAccessToken = req.cookies.accessToken;
-  const authId = req.cookies.user_id;
-
-  if (!jwtAccessToken)
-    return res
-      .status(401)
-      .json({ error: superAdminErrors.superAdminError.Unauthorized });
-
-  const certPathPublic = process.env.PUBLIC_KEY_PATH;
-
-  try {
-    const cert = fs.readFileSync(certPathPublic);
-    const token = jwtAccessToken;
-
-    jwt.verify(token, cert, { algorithms: ["RS512"] }, (err, user) => {
-      if (err) {
-        return res
-          .status(403)
-          .json({ error: superAdminErrors.superAdminError.Unauthorized });
-      }
-
-      if (user._id !== authId)
-        return res
-          .status(401)
-          .json({ error: superAdminErrors.superAdminError.Unauthorized });
-
-      next();
-    });
-  } catch (err) {
-    return res.status(500).json({ error: err });
-  }
-};
-
 
 
 exports.adminByID = async (req, res, next, id) => {

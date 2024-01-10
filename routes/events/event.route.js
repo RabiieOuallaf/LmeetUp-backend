@@ -3,7 +3,7 @@ const { formValidation } = require('../../middlewares/Validators/eventFormValida
 const router = express.Router()
 const upload = require('../../middlewares/helpers/multerConfig')
 const { addEvent , updateEvent, getAllEvents, getOneEvent, deleteEvent, advancedAddEvent, assignRevendeurToEvent} = require('../../controllers/events/controller.event')
-const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/auth')
+const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/superAdminAuth')
 
 
 

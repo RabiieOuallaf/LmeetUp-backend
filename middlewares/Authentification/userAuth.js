@@ -3,68 +3,84 @@ const User = require('../../models/Users/model.user')
 
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const { decryptData, encryptData } = require('../../utils/encryptionUtil')
 
 
-exports.verifyAuthHeaderToken = (req, res, next) => {
+exports.verifyAuthHeaderToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    
-    
+    const refreshTokenCookie = req.cookies.refreshToken;
 
-    if(!authHeader)
-        return res.json({error: userErrors.userError.Unauthorized})
-
-    const certPathPublic = process.env.PUBLIC_KEY_PATH;
+    if (!authHeader) {
+        return res.status(401).json({ error: userErrors.userError.Unauthorized });
+    }
 
     try {
-        const cert = fs.readFileSync(certPathPublic)
-        const token = authHeader.split(' ')[1]
-        console.log(token);
-        jwt.verify(token, cert, { algorithms: ['RS512'] }, (err, user) => {
-            console.log(user)
-            if (err) {
-                return res.status(403).json({ error: userErrors.userError.Unauthorized });
+        const certPathPublic = process.env.PUBLIC_KEY_PATH;
+        const cert = fs.readFileSync(certPathPublic);
+        const token = authHeader.split(' ')[1];
+
+        let user;
+
+        try {
+            user = jwt.verify(token, cert, { algorithms: ['RS512'] });
+        } catch (err) {
+            if (!refreshTokenCookie) {
+                return res.status(401).json({ error: userErrors.userError.Unauthorized });
             }
 
-            if(user._id !== req.params.adminID)
-                return res.status(401).json({error: userErrors.userError.Unauthorized})
+            const decryptedRefreshToken = decryptData(refreshTokenCookie);
 
-            next()
-        });
-    }
-    catch(err) {
-        return res.status(500).json({error: err})
+            if (!decryptedRefreshToken) {
+                return res.status(401).json({ error: userErrors.userError.Unauthorized });
+            }
+
+            const userID = req.params.adminID;
+            const certPathPrivate = process.env.PRIVATE_KEY_PATH;
+            const certPrivate = fs.readFileSync(certPathPrivate);
+
+            const newAccessToken = jwt.sign(
+                {
+                    _id: userID,
+                    exp: Math.floor(Date.now() / 1000) + 3 * 60 * 60,
+                },
+                certPrivate,
+                { algorithm: 'RS512' }
+            );
+
+            const newRefreshToken = jwt.sign(
+                {
+                    _id: userID,
+                    exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+                },
+                certPrivate,
+                { algorithm: 'RS512' }
+            );
+
+            let encryptedNewAccessToken = encryptData(newAccessToken);
+            let encryptedNewRefreshToken = encryptData(newRefreshToken);
+
+            res.cookie('accessToken', encryptedNewAccessToken, {
+                maxAge: 3 * 60 * 60 * 1000,
+                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production',
+            });
+
+            res.cookie('refreshToken', encryptedNewRefreshToken, {
+                maxAge: 24 * 60 * 60 * 1000,
+                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production',
+            });
+
+            user = jwt.verify(newAccessToken, cert, { algorithms: ['RS512'] });
+        }
+
+        req.user = user;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: userErrors.userError.Unauthorized });
     }
 }
 
-exports.verifyCookieToken = (req, res, next) => {
-    const authJwtCookie = req.cookies.token
-    const authIdCookie = req.cookies.user_id
-
-    if(!authJwtCookie)
-        return res.json({error: userErrors.userError.Unauthorized})
-
-    const certPathPublic = process.env.PUBLIC_KEY_PATH;
-
-    try {
-        const cert = fs.readFileSync(certPathPublic)
-        const token = authJwtCookie
-
-        jwt.verify(token, cert, { algorithms: ['RS512'] }, (err, user) => {
-            if (err) {
-                return res.status(403).json({ error: userErrors.userError.Unauthorized });
-            }
-
-            if(user._id !== authIdCookie)
-                return res.status(401).json({error: userErrors.userError.Unauthorized})
-
-            console.log("pass 2 => OK")
-            next()
-        });
-    }
-    catch(err) {
-        return res.status(500).json({error: err})
-    }
-}
 
 exports.adminByID = async (req, res, next, id) => {
     try {
