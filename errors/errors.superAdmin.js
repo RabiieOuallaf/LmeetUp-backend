@@ -1,4 +1,7 @@
 exports.superAdminError = {
+    emptyPhoneNumber: "Veuillez entrer votre numéro de téléphone",
+    emptyLogoUrl: "Veuillez entrer votre logo",
+    emptyPseudo: "Veuillez entrer votre pseudo",
     emptyEmail: "Veuillez entrer votre Email",
     emptyPassword: "Veuillez entrer votre mot de passe",
     email: "Veuilez entrer une adress e-mail correcte",

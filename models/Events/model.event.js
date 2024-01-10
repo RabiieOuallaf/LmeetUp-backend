@@ -37,8 +37,7 @@ const eventSchema = new mongoose.Schema(
     endTime: {
       type: String,
     },
-    turnOver: {
-      // Chiffre d'affaire
+    turnOver: { // Chiffre d'affaire
       type: Number,
     },
     totalTickets: {

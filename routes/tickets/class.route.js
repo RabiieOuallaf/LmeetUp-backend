@@ -6,8 +6,8 @@ const { addClass, updateClass, getAllClasses, getOneClass, deleteClass, getTicke
 const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/superAdminAuth')
 
 
-router.post('/add',  formValidation, addClass)
-router.put('/update/:id', formValidation, updateClass)
+router.post('/add',  verifyAuthHeaderToken,formValidation, addClass)
+router.put('/update/:id', verifyAuthHeaderToken,formValidation, updateClass)
 
 router.get('/getAll' ,getAllClasses)
 router.get('/get/:id' ,getOneClass)

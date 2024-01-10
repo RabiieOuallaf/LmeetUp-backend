@@ -4,7 +4,7 @@ const Joi = require("joi")
 function formValidation(req, res, next) {
     const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
     const formSchema = Joi.object({
-        name: Joi.string().min(3).max(25),
+        fullName: Joi.string().min(3).max(25),
         email:
             Joi.string()
             .required()
@@ -15,6 +15,18 @@ function formValidation(req, res, next) {
             })
             .min(3)
             .max(90),
+        phoneNumber: 
+            Joi.string()
+            .messages({
+                "string.empty": superAdminErrors.superAdminError.emptyPhoneNumber,
+            })
+            .max(24),
+        logoUrl: Joi.string().messages({
+            "string.empty": superAdminErrors.superAdminError.emptyLogoUrl,
+        }),
+        pseudo: Joi.string().messages({
+            "string.empty": superAdminErrors.superAdminError.emptyPseudo,
+        }),
         password: Joi.string()
             .required()
             .messages({

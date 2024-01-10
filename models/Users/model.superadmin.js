@@ -2,8 +2,20 @@ const mongoose = require('mongoose')
 const { generateSaltedHash } = require('../../utils/generateHash')
 
 const superAdminSchema = new mongoose.Schema({
+    fullName : {
+        type : String
+    },
     email: {
         type: String,
+    },
+    phoneNumber: {
+        type : String
+    },
+    logoUrl : {
+        type : String
+    },
+    pseudo : {
+        type : String
     },
     password: {
         type: Object,
@@ -12,7 +24,6 @@ const superAdminSchema = new mongoose.Schema({
 
 superAdminSchema.pre('save', async function(next) {
     const hashedPassword = await generateSaltedHash(this.password)
-
     this.password = hashedPassword
     next()
 });
