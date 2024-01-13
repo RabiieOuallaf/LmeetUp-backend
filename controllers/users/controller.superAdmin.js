@@ -11,14 +11,17 @@ exports.signup = async (req, res) => {
       req.body.confirmPassword !== req.body.password ||
       !req.body.confirmPassword
     ) {
-      return res
-        .status("400")
-        .json({
-          error:
-            superAdminErrors.superAdminError.passwordAndConfirmPasswordIsMatch,
-        });
+      return res.status("400").json({
+        error:
+          superAdminErrors.superAdminError.passwordAndConfirmPasswordIsMatch,
+      });
     }
-    const createdSuperAdminModel = new SuperadminModel(req.body);
+    const superAdminData = {
+      ...req.body,
+      logoUrl: req.file.path,
+    };
+    console.log(superAdminData);
+    const createdSuperAdminModel = new SuperadminModel(superAdminData);
     await createdSuperAdminModel.save();
 
     res.json(createdSuperAdminModel);
@@ -34,11 +37,9 @@ exports.CheckIfEmailIsExist = async (req, res, next) => {
     }).exec();
 
     if (count !== 0)
-      return res
-        .status(400)
-        .json({
-          error: superAdminErrors.superAdminError.checkThisEmailIfAlreadyExist,
-        });
+      return res.status(400).json({
+        error: superAdminErrors.superAdminError.checkThisEmailIfAlreadyExist,
+      });
 
     next();
   } catch (error) {
@@ -52,11 +53,9 @@ exports.signIn = async (req, res) => {
       email: req.body.email,
     });
     if (!foundSuperAdmin) {
-      return res
-        .status(404)
-        .json({
-          error: superAdminErrors.superAdminError.checkThisEmailIfNotExist,
-        });
+      return res.status(404).json({
+        error: superAdminErrors.superAdminError.checkThisEmailIfNotExist,
+      });
     }
 
     const hashedPassword = await generateSaltedHash(
@@ -123,8 +122,6 @@ exports.signIn = async (req, res) => {
     res.status(400).json({ error: error });
   }
 };
-
-
 
 exports.getOneAdmin = async (req, res) => {
   try {

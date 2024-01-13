@@ -1,8 +1,7 @@
 const mongoose = require('mongoose')
 const { generateSaltedHash } = require('../../utils/generateHash')
-const {identityDocumentTypes} = require('../../enums/enum.identityDocumentTypes');
-const {functionTypes} = require('../../enums/enum.identityDocumentTypes');
-
+const identityDocumentTypes = require('../../enums/enum.identityDocumentTypes')
+const functionTypes = require('../../enums/enum.functionTypes');
 
 const benevolentSchema = new mongoose.Schema({
     firstName: {
@@ -13,7 +12,6 @@ const benevolentSchema = new mongoose.Schema({
     },
     email : {
         type: String,
-        // add trim 
     },
     password: {
         type: Object,
@@ -24,12 +22,13 @@ const benevolentSchema = new mongoose.Schema({
     pseudo: {
         type: String,
     },
-    birthday : {
+    birthdate : {
         type : Date,
     },
     identityDocumentType : {
         type : String ,
         enum : Object.values(identityDocumentTypes),
+        default : identityDocumentTypes.CIN,
     },
     identityDocumentNumber : {
         type : String,
@@ -39,7 +38,13 @@ const benevolentSchema = new mongoose.Schema({
         enum : Object.values(functionTypes),
     }
     
-}) // joi
+});
+benevolentSchema.pre('save', async function(next) {
+    const hashedPassword = await generateSaltedHash(this.password)
+
+    this.password = hashedPassword
+    next()
+});
 
 const Benevolent = mongoose.model('Benevolent', benevolentSchema);
 module.exports = Benevolent;

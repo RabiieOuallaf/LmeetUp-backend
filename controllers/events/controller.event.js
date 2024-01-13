@@ -2,9 +2,8 @@ const Event = require("../../models/Events/model.event");
 const redisClient = require("../../utils/redisClient");
 const fs = require("fs");
 const path = require("path");
-const {
-  assignEventToRevendeur,
-} = require("../../controllers/users/controller.revendeur");
+const RevendeurModel = require("../../models/Users/model.revendeur");
+
 
 exports.addEvent = async (req, res) => {
   try {
@@ -14,7 +13,6 @@ exports.addEvent = async (req, res) => {
       miniatureUrl: req.files["miniature"]
         ? req.files["miniature"][0].path
         : "",
-     
     };
 
     const event = await new Event(eventData).save();
@@ -122,7 +120,6 @@ exports.updateEvent = async (req, res) => {
       miniatureUrl: req.files["miniature"]
         ? req.files["miniature"][0].path
         : foundEvent.miniatureUrl,
-      
     };
 
     Object.assign(foundEvent, eventData);
@@ -222,7 +219,6 @@ exports.deleteEvent = async (req, res, next) => {
         const imagePath = path.join(__dirname, "..", "..", foundEvent.imageUrl);
 
         if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
-         
       }
 
       if (foundEvent.miniatureUrl) {
@@ -234,7 +230,6 @@ exports.deleteEvent = async (req, res, next) => {
         );
 
         if (fs.existsSync(miniaturePath)) fs.unlinkSync(miniaturePath);
-
       }
       res.status(204).json({ warning: "Event is deleted" });
     } else {
@@ -244,7 +239,7 @@ exports.deleteEvent = async (req, res, next) => {
     res.status(400).json({ error: error.message });
   } finally {
     await redisClient.quit();
-    next()
+    next();
   }
 };
 
@@ -256,28 +251,25 @@ exports.assignRevendeurToEvent = async (req, res, next) => {
     const foundEvent = await Event.findById(eventId);
 
     if (!foundEvent) {
-      return res
-        .status(404)
-        .json({
-          error: "You're trying to assign revendeur to a non-existing event",
-        });
+      return res.status(404).json({
+        error: "You're trying to assign revendeur to a non-existing event",
+      });
     }
 
-    const assignEventToRevendeurResult = await assignEventToRevendeur(
-      eventId,
-      revendeurId
-    );
+    const foundRevendeur = await RevendeurModel.findById(revendeurId);
 
-    if (assignEventToRevendeurResult.error) {
-      return res
-        .status(400)
-        .json({ error: assignEventToRevendeurResult.error });
+    if (!foundRevendeur) {
+      return res.status(404).json({
+        error: "You're trying to assign event to a non-existing revendeur",
+      });
     }
 
-    if (revendeurId) {
-      foundEvent.revendeur = revendeurId;
-      
+    // Check if revendeurId already exists in the event's revendeur array
+    if (!foundEvent.revendeur.includes(revendeurId)) {
+      foundEvent.revendeur.push(revendeurId);
       const updatedEvent = await foundEvent.save();
+
+      // Additional logic for caching in Redis
       redisClient.connect();
       let cachedEvents = await redisClient.get("events");
       cachedEvents = cachedEvents ? JSON.parse(cachedEvents) : [];
@@ -289,16 +281,26 @@ exports.assignRevendeurToEvent = async (req, res, next) => {
       cachedEvents.push(updatedEvent);
 
       redisClient.set("event", JSON.stringify(updatedEvent));
-      return res.status(200).json(updatedEvent);
+
+      // Check if eventId already exists in the revendeur's events array
+      if (!foundRevendeur.events.includes(eventId)) {
+        foundRevendeur.events.push(eventId);
+        const updatedRevendeur = await foundRevendeur.save();
+
+        return res.status(200).json({ updatedEvent, updatedRevendeur });
+      } else {
+        return res.status(400).json({ error: "Event already assigned to the revendeur" });
+      }
+    } else {
+      return res.status(400).json({ error: "Revendeur already assigned to the event" });
     }
-    return res.status(400).json({ error: "select a revendeur" });
   } catch (error) {
-    console.error("Error in revendeur assigning");
+    console.error("Error in revendeur assigning:", error);
     next(error);
   } finally {
     try {
       const pong = await redisClient.ping();
-      if (pong === 'PONG') {
+      if (pong === "PONG") {
         await redisClient.quit();
       }
     } catch (error) {
@@ -306,3 +308,4 @@ exports.assignRevendeurToEvent = async (req, res, next) => {
     }
   }
 };
+

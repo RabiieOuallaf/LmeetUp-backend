@@ -3,7 +3,7 @@ const { formValidation } = require('../../middlewares/Validators/ticketFormValid
 
 const router = express.Router();
 const { addTicket, updateTicket, getAllTickets, getOneTicket, deleteTicket  } = require('../../controllers/tickets/controller.ticket');
-const { buyTicket , getBoughtTicket , getAllBoughtTickets} = require('../../controllers/tickets/controller.boughtTicket')
+const { buyTicket , getBoughtTicket , getAllBoughtTickets,getBoughtTicketByEvent} = require('../../controllers/tickets/controller.boughtTicket')
 
 router.post('/add', formValidation, addTicket);
 router.put('/update/:id', formValidation, updateTicket);
@@ -16,5 +16,6 @@ router.delete('/delete/:id', deleteTicket);
 router.post('/buyTicket', buyTicket)
 router.get('/getBoughtTicket/:code', getBoughtTicket)
 router.get('/getAllBoughtTickets', getAllBoughtTickets)
+router.get('/getAllBoughtTicketsByEvent/:event', getBoughtTicketByEvent)
 
 module.exports = router;

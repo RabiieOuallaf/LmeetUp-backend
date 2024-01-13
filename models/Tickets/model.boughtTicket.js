@@ -15,9 +15,7 @@ const boughtTicketSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Event'
     },
-    price : {
-        type : Number,
-    },
+    
 }, { timestamps: true });
 
 boughtTicketSchema.methods.toJSON = function () {

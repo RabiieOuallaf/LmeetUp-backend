@@ -21,8 +21,8 @@ function formValidation(req, res, next) {
                 "string.empty": superAdminErrors.superAdminError.emptyPhoneNumber,
             })
             .max(24),
-        logoUrl: Joi.string().messages({
-            "string.empty": superAdminErrors.superAdminError.emptyLogoUrl,
+        logo: Joi.binary().optional().messages({
+            "any.empty": superAdminErrors.superAdminError.emptyLogoUrl,
         }),
         pseudo: Joi.string().messages({
             "string.empty": superAdminErrors.superAdminError.emptyPseudo,

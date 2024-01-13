@@ -6,7 +6,7 @@ const { decryptData, encryptData } = require('../../utils/encryptionUtil')
 
 exports.verifyRevendeurHeaderToken = async (req, res, next) => {
     const encryptedAccessToken = req.headers['authorization'];
-    const encryptedRefreshToken = req.headers['refreshToken'];
+    const encryptedRefreshToken = req.cookies.refreshToken
   
     if (!encryptedAccessToken) {
       return res.status(401).json({ error: revendeurErrors.revendeurError.Unauthorized });

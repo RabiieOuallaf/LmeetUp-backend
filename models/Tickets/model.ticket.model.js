@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const ticketSchema = new mongoose.Schema({
     class: {
-        type : String,
+        type : mongoose.Schema.Types.ObjectId,
         ref : 'Class'
     },
     event: {

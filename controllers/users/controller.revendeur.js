@@ -12,12 +12,9 @@ exports.signUp = async (req, res) => {
       req.body.confirmPassword !== req.body.password ||
       !req.body.confirmPassword
     ) {
-      return res
-        .status("400")
-        .json({
-          error:
-            RevendeurErrors.revendeurError.passwordAndConfirmPasswordIsMatch,
-        });
+      return res.status("400").json({
+        error: RevendeurErrors.revendeurError.passwordAndConfirmPasswordIsMatch,
+      });
     }
     const createdRevendeurModel = new RevendeurModel(req.body);
     await createdRevendeurModel.save();
@@ -35,11 +32,9 @@ exports.CheckIfEmailIsExist = async (req, res, next) => {
     }).exec();
 
     if (count !== 0)
-      return res
-        .status(400)
-        .json({
-          error: RevendeurErrors.revendeurError.checkThisEmailIfAlreadyExist,
-        });
+      return res.status(400).json({
+        error: RevendeurErrors.revendeurError.checkThisEmailIfAlreadyExist,
+      });
 
     next();
   } catch (error) {
@@ -53,11 +48,9 @@ exports.signIn = async (req, res) => {
       email: req.body.email,
     });
     if (!foundRevendeur) {
-      return res
-        .status(404)
-        .json({
-          error: RevendeurErrors.revendeurError.checkThisEmailIfNotExist,
-        });
+      return res.status(404).json({
+        error: RevendeurErrors.revendeurError.checkThisEmailIfNotExist,
+      });
     }
 
     const hashedPassword = await generateSaltedHash(
@@ -119,7 +112,6 @@ exports.signIn = async (req, res) => {
         refreshToken: encryptedRefreshToken,
       });
 
-      res.json({ accessToken: encryptedAccessToken });
     } catch (error) {
       res.status(500).json({ error: error });
     }
@@ -132,7 +124,9 @@ exports.getOneRevendeur = async (req, res) => {
   try {
     const revendeurId = req.params.id;
 
-    const revendeur = await RevendeurModel.findById(revendeurId).populate("events");
+    const revendeur = await RevendeurModel.findById(revendeurId).populate(
+      "events"
+    );
 
     if (!revendeur) {
       return res
@@ -146,26 +140,10 @@ exports.getOneRevendeur = async (req, res) => {
   }
 };
 
-exports.assignEventToRevendeur = async (eventId, revendeurId) => {
-  try {
-    const foundRevendeur = await RevendeurModel.findById(revendeurId);
 
-    if (!foundRevendeur) {
-      return {
-        error: "You're trying to assign event to a non-existing revendeur",
-      };
-    }
-
-    if (eventId && eventId.length === 24) {
-
-      foundRevendeur.events.push(revendeurId)
-      const updatedRevendeur = await foundRevendeur.save();
-      return { updatedRevendeur };
-    }
-
-    return { error: "Select an event" };
-  } catch (error) {
-    console.error("Error in event assigning:", error);
-    throw error;
-  }
-};
+exports.sellTicket = async (req, res,next) => {
+  // Get revendeur 
+  // Get ticket 
+  // Save bought ticket in bough ticket collection 
+  // save sold ticket in an array in revendeur
+}
