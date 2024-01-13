@@ -1,10 +1,21 @@
 const RevendeurModel = require("../../models/Users/model.revendeur");
 const RevendeurErrors = require("../../errors/errors.revendeur");
+const EventModel = require("../../models/Events/model.event");
+const UserModel = require("../../models/Users/model.user");
+const TicketModel = require("../../models/Tickets/model.ticket.model");
+const BoughtTicketModel = require("../../models/Tickets/model.boughtTicket");
+
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
-const { generateSaltedHash } = require("../../utils/generateHash");
+const { generateSaltedHash } = require("../../utils/generateHash"); // Added import statement
 const { encryptData } = require("../../utils/encryptionUtil");
 const redisClient = require("../../utils/redisClient");
+
+const generateRevendeurRandomCode = (revendeurIdentityNumber) => {
+  const randomNumber = Math.floor(Math.random() * 90 + 10);
+  const randomCode = Math.random().toString(36).substring(2, 9);
+  return `${revendeurIdentityNumber}-${randomNumber}-${randomCode}`;
+};
 
 exports.signUp = async (req, res) => {
   try {
@@ -111,7 +122,6 @@ exports.signIn = async (req, res) => {
         accessToken: encryptedAccessToken,
         refreshToken: encryptedRefreshToken,
       });
-
     } catch (error) {
       res.status(500).json({ error: error });
     }
@@ -140,10 +150,65 @@ exports.getOneRevendeur = async (req, res) => {
   }
 };
 
+exports.sellTicket = async (req, res, next) => {
+  try {
+    const foundRevendeur = await RevendeurModel.findById(
+      req.body.revendeur
+    );
+    const foundTicket = await TicketModel.findById(req.body.ticket);
+    const foundEvent = await EventModel.findById(req.body.event);
+    const foundUser = await UserModel.findById(req.body.user);
 
-exports.sellTicket = async (req, res,next) => {
-  // Get revendeur 
-  // Get ticket 
-  // Save bought ticket in bough ticket collection 
-  // save sold ticket in an array in revendeur
-}
+    if (!foundRevendeur || !foundTicket)
+      return res.status(404).json({ error: "Revendeur or ticket not found" });
+
+    if (!foundEvent || !foundUser)
+      return res.status(404).json({ error: "Event or user not found" });
+
+    if (foundEvent.tickets.length >= foundEvent.totalTickets)
+      return res
+        .status(400)
+        .json({ error: "No available tickets for this event" });
+
+    const boughtTicketData = {
+      ...req.body,
+      price: foundTicket.price,
+      code: generateRevendeurRandomCode(foundRevendeur.identityDocumentNumber),
+    };
+
+    console.log(boughtTicketData)
+    const savedBoughTicket = await new BoughtTicketModel(boughtTicketData).save();
+    await savedBoughTicket.save();
+
+    foundRevendeur.soldTickets = Array.isArray(foundRevendeur.soldTickets)
+      ? foundRevendeur.soldTickets
+      : [];
+    foundRevendeur.soldTickets.push(savedBoughTicket._id);
+
+    await foundRevendeur.save();
+
+    return res.status(201).json(savedBoughTicket);
+  } catch (error) {
+    console.error("Error buying ticket:", error);
+    res.status(400).json({ error });
+  }
+};
+
+exports.getRevendeurSoldTickets = async (req, res) => {
+  try {
+    const revendeurId = req.params.id;
+    
+    const foundRevendeur = await RevendeurModel.findById(revendeurId).populate("soldTickets");
+
+    if (!foundRevendeur)
+      return res.status(404).json({ error: RevendeurErrors.revendeurError.revendeurNotFound });
+
+    if (foundRevendeur.soldTickets.length === 0) 
+      return res.status(404).json({ error: "Revendeur didn't sell any ticket" });
+
+    res.status(200).json(foundRevendeur.soldTickets);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -309,3 +309,20 @@ exports.assignRevendeurToEvent = async (req, res, next) => {
   }
 };
 
+exports.getEventRevendeurs = async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    const revendeurs = await RevendeurModel.find({ events: eventId });
+
+    return res.json({ revendeurs });
+  } catch (error) {
+    console.error("Error getting event revendeurs:", error);
+    res.status(400).json({ error });
+  }
+}

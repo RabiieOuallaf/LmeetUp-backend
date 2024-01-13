@@ -15,6 +15,10 @@ const boughtTicketSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Event'
     },
+    revendeur : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'Revendeur'
+    }
     
 }, { timestamps: true });
 
