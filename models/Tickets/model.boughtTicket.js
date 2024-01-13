@@ -24,7 +24,8 @@ const boughtTicketSchema = new mongoose.Schema({
 
 boughtTicketSchema.methods.toJSON = function () {
     const boughtTicket = this.toObject();
-    delete boughtTicket.user.password;
+    if(boughtTicket.user && boughtTicket.user.password)
+        delete boughtTicket.user.password;
     return boughtTicket;
   };
 

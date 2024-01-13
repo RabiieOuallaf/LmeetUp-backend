@@ -6,13 +6,9 @@ const app = express()
 const http = require("http").createServer(app);
 const socketio = require("socket.io")(http); // Pass the HTTP server object to Socket.IO
 const {connectedToDB} = require('./connection/mongodb')
-const multer = require('multer')
-const storage = require('./middlewares/helpers/multerConfig')
 require('dotenv').config()
 
 connectedToDB();
-
-
   
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -31,6 +27,8 @@ const cityRouter = require('./routes/events/city.route')
 const revendeurRouter = require('./routes/users/routes.revendeur')
 const classRouter = require('./routes/tickets/class.route')
 const benevolentRouter = require('./routes/users/routes.benevolent')
+const invitationRouter = require('./routes/tickets/invitation.route')
+
 app.use('/api/v1/superAdmin', superAdminRouter)
 app.use('/api/v1/user', usersRouter)
 app.use('/api/v1/event', eventRouter)
@@ -41,6 +39,7 @@ app.use('/api/v1/city', cityRouter)
 app.use('/api/v1/revendeur', revendeurRouter)
 app.use('/api/v1/class', classRouter)
 app.use('/api/v1/benevolent', benevolentRouter)
+app.use('/api/v1/invitation', invitationRouter)
 
 const port = process.env.PORT || 3000
 http.listen(port, () => console.log('\x1b[32m%s\x1b[0m', `app is now listening at port ${port}`))

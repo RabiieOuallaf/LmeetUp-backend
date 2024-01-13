@@ -13,9 +13,9 @@ const redisClient = require("../../utils/redisClient");
 
 const generateRevendeurRandomCode = (revendeurIdentityNumber) => {
   const randomNumber = Math.floor(Math.random() * 90 + 10);
-  const randomCode = Math.random().toString(36).substring(2, 9);
-  return `${revendeurIdentityNumber}-${randomNumber}-${randomCode}`;
-};
+  const randomCode = Math.random().toString(36).substring(3, 8);
+  return `rev-${revendeurIdentityNumber}-${randomNumber}-${randomCode}`;
+}
 
 exports.signUp = async (req, res) => {
   try {
@@ -212,3 +212,4 @@ exports.getRevendeurSoldTickets = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+

@@ -12,7 +12,7 @@ const eventSchema = new mongoose.Schema(
     tickets: [
       {
         type: String,
-        ref: "Ticket",
+        ref: "boughtTicket",
       },
     ],
     totalTickets: {
