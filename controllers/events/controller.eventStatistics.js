@@ -58,12 +58,11 @@ exports.getSoldTicketsSourcesTable = async (req, res) => {
         );
         if (existingTicket) {
           existingTicket.totalSoldTickets += 1;
-          existingTicket.totalPrice = soldTicket.ticket.price * existingTicket.totalSoldTickets; // Updated line
+          existingTicket.totalPrice = soldTicket.ticket.price * existingTicket.totalSoldTickets; 
         } else {
           const ticketData = {
             ticket: {
               _id: soldTicket.ticket,
-              code: soldTicket.code,
               class: soldTicket.class,
               event: soldTicket.event,
               coupon: soldTicket.coupon,
