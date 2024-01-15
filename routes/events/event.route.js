@@ -9,10 +9,14 @@ const { addEvent ,
     deleteEvent, 
     advancedAddEvent, 
     assignRevendeurToEvent,
-    getEventRevendeurs
+    getEventRevendeurs,
 } = require('../../controllers/events/controller.event')
 const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/superAdminAuth')
-const { getSoldTicketsProgressByEvent, getSoldTicketsSourcesTable } = require('../../controllers/events/controller.eventStatistics')
+const { getSoldTicketsProgressByEvent, 
+        getSoldTicketsSourcesTable,
+        getSoldTicketsClassesTable
+
+    } = require('../../controllers/events/controller.eventStatistics')
 
 router.post('/add', verifyAuthHeaderToken ,uploadEvent, formValidation,addEvent)
 router.post('/addAdvanced/:id',verifyAuthHeaderToken,advancedAddEvent)
@@ -25,7 +29,7 @@ router.get('/get/:id' ,getOneEvent)
 router.get('/getSoldTicketsProgressByEvent/:id' ,getSoldTicketsProgressByEvent)
 router.get('/getEventRevendeurs/:id', getEventRevendeurs);
 router.get('/getSoldTicketsSourcesTable/:id', getSoldTicketsSourcesTable);
-
+router.get('/getSoldTicketsClassesTable/:id', getSoldTicketsClassesTable);
 router.delete('/delete/:id', deleteEvent)
 
 module.exports = router

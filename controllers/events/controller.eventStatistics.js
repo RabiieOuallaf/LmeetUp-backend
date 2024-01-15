@@ -33,7 +33,7 @@ exports.getSoldTicketsSourcesTable = async (req, res) => {
       return res.status(400).json({ error: "Event ID not provided" });
     }
 
-    const foundEvent = await Event.findById(eventId).populate("revendeur").populate({ path: "tickets", populate: { path: "ticket" } });;
+    const foundEvent = await Event.findById(eventId).populate("revendeur").populate({ path: "tickets", populate: { path: "ticket" } });
 
     if (!foundEvent) {
       return res.status(404).json({ error: "Event not found" });
@@ -58,11 +58,12 @@ exports.getSoldTicketsSourcesTable = async (req, res) => {
         );
         if (existingTicket) {
           existingTicket.totalSoldTickets += 1;
-          existingTicket.totalPrice = soldTicket.ticket.price * existingTicket.totalSoldTickets; 
+          existingTicket.totalPrice += soldTicket.ticket.price;
         } else {
           const ticketData = {
             ticket: {
               _id: soldTicket.ticket,
+              code: soldTicket.code,
               class: soldTicket.class,
               event: soldTicket.event,
               coupon: soldTicket.coupon,
@@ -121,9 +122,76 @@ exports.getSoldTicketsSourcesTable = async (req, res) => {
       }
     }
 
+    const total = revendeursSoldTickets.reduce(
+      (acc,curr) => {
+        acc.totalPrice += curr.totalPrice;
+        acc.totalTickets += curr.totalSoldTickets;
+        return acc;
+      }
+      ,{totalPrice: 0, totalTickets: 0}
+    )
+
     res.status(200).json({
       revendeursSoldTickets: revendeursSoldTickets,
       onlineSoldTickets: onlineSoldTickets,
+      total: total
+    });
+  } catch (error) {
+    console.error("Error getting sold tickets sources table:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getSoldTicketsClassesTable = async (req, res) => {
+  try {
+    const eventId = req.params.id;
+
+    if (!eventId) {
+      return res.status(400).json({ error: "Event ID not provided" });
+    }
+
+    const foundEvent = await Event.findById(eventId).populate("revendeur").populate({ path: "tickets", populate: { path: "ticket", populate : {path: "class"} } });
+
+    if (!foundEvent) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    const foundEventSoldTickets = Array.isArray(foundEvent.tickets) ? foundEvent.tickets : [];
+
+    const classSoldTickets = {};
+
+    for (const soldTicket of foundEventSoldTickets) {
+      if (soldTicket.ticket && soldTicket.ticket.class && soldTicket.ticket.class.name) {
+        const classId = soldTicket.ticket.class._id.toString();
+
+        if (!classSoldTickets[classId]) {
+          classSoldTickets[classId] = {
+            classId: classId,
+            className: soldTicket.ticket.class.name, // Assuming you have a name property in your class schema
+            totalSoldTickets: 1,
+            PricePerUnit: soldTicket.ticket.price,
+            totalPrice: soldTicket.ticket.price
+          };
+        } else {
+          classSoldTickets[classId].totalSoldTickets += 1;
+          classSoldTickets[classId].totalPrice += soldTicket.ticket.price;
+        }
+      }
+    }
+
+    const classSoldTicketsArray = Object.values(classSoldTickets);
+
+    const total = classSoldTicketsArray.reduce(
+      (acc, curr) => {
+        acc.totalPrice += curr.totalPrice;
+        acc.totalTickets += curr.totalSoldTickets;
+        return acc;
+      },
+      { totalPrice: 0, totalTickets: 0 }
+    );
+
+    res.status(200).json({
+      classSoldTickets: classSoldTicketsArray,
+      total: total,
     });
   } catch (error) {
     console.error("Error getting sold tickets sources table:", error);
