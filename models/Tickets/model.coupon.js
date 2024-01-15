@@ -19,13 +19,28 @@ const couponSchema = new mongoose.Schema({
         type : String,
         enum : Object.values(couponCreatorTypes),
     },
+    class : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'Class',
+    },
+    startDate: {
+        type: Date,
+    },
+    usageLimit : {
+        type : Number,
+    },
     expirationDate: {
         type: Date,
     },
     isActive: {
         type: Boolean,
         default: true
+    },
+    event: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Event',
     }
+    
 });
 
 const Coupon = mongoose.model('Coupon', couponSchema);

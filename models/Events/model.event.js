@@ -9,6 +9,10 @@ const eventSchema = new mongoose.Schema(
       type: String,
       default: "Sans description",
     },
+    status : {
+      type : String, 
+      default : "En attente"
+    },
     tickets: [
       {
         type: String,
@@ -37,6 +41,9 @@ const eventSchema = new mongoose.Schema(
     endTime: {
       type: String,
     },
+    date : {
+      type : Date
+    },
     turnOver: { // Chiffre d'affaire
       type: Number,
     },
@@ -63,6 +70,7 @@ const eventSchema = new mongoose.Schema(
     eventPlan: {
       type: String,
     },
+    
   },
   { timestamps: true }
 );

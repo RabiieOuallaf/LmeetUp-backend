@@ -8,10 +8,6 @@ const ticketSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Event',
     },
-    coupon : {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Coupon',
-    },
     price : {
         type : Number,
     }

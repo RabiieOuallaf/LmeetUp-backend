@@ -1,6 +1,17 @@
 const express = require('express')
 const router = express.Router()
-const { addInvitation, updateInvitation, getAllInvitations, getInvitation,getInvitationByFirstAndLastName, deleteInvitation } = require('../../controllers/tickets/controller.invitation')
+const { 
+    addInvitation, 
+    updateInvitation, 
+    getAllInvitations, 
+    getInvitation,
+    getInvitationByFirstAndLastName, 
+    deleteInvitation,
+    sendInvitationEmail
+} = require('../../controllers/tickets/controller.invitation')
+
+
+router.post('/send-email/:id', sendInvitationEmail)
 
 router.post('/add', addInvitation)
 router.put('/update/:id', updateInvitation)

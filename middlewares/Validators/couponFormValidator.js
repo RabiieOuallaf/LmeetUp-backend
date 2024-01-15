@@ -17,12 +17,21 @@ function formValidation (req, res, next) {
                 "string.empty": couponError.couponError.couponCodeDiscountEmpty,
                 "string.required": couponError.couponError.couponCodeDiscountEmpty
             }),
+        class: Joi.string().required(),
+        startDate: Joi.date()
+            .required()
+            .messages({
+                "string.empty": couponError.couponError.couponCodeExpirationDate,
+                "string.required": couponError.couponError.couponCodeExpirationDate
+            }),
         type: Joi.string()
             .required()
             .messages({
                 "string.empty": couponError.couponError.couponCodeDiscountType,
                 "string.required": couponError.couponError.couponCodeDiscountType
             }),
+        event: Joi.string()
+            .required(),
         creator: Joi.string()
             .required()
             .messages({

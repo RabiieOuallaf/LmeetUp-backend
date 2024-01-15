@@ -15,9 +15,16 @@ const boughtTicketSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Event'
     },
+    coupon : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Coupon',
+    },
     revendeur : {
         type : mongoose.Schema.Types.ObjectId,
         ref : 'Revendeur'
+    },
+    price : {
+        type : Number
     }
     
 }, { timestamps: true });

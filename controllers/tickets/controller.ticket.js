@@ -1,4 +1,4 @@
-const Ticket = require("../../models/Tickets/model.ticket.model");
+const Ticket = require("../../models/Tickets/model.ticket");
 const redisClient = require("../../utils/redisClient");
 
 exports.addTicket = async (req, res) => {

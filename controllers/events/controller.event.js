@@ -326,3 +326,74 @@ exports.getEventRevendeurs = async (req, res) => {
     res.status(400).json({ error });
   }
 }
+
+exports.markEventAsInProgress = async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const foundEvent = await Event.findById(eventId);
+
+    if (!foundEvent) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    foundEvent.status = "En cours";
+    const updatedEvent = await foundEvent.save();
+
+    res.json({ updatedEvent });
+  } catch (error) {
+    console.error("Error marking event as in progress:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.markEventAsPending = async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const foundEvent = await Event.findById(eventId);
+
+    if (!foundEvent) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    foundEvent.status = "En attente";
+    const updatedEvent = await foundEvent.save();
+
+    res.json({ updatedEvent });
+  } catch (error) {
+    console.error("Error marking event as pending:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.filterEvents = async (req, res) => {
+  try {
+    redisClient.connect();
+
+    const filter = {};
+
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    if (req.query.city) {
+      filter.city = req.query.city;
+    }
+
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    const events = await Event.find(filter)
+      .populate("category")
+      .populate("city")
+      .populate("revendeur")
+      .exec();
+
+    res.json({ events });
+  } catch (error) {
+    console.error("Error in filterEvents:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    await redisClient.quit();
+  }
+};

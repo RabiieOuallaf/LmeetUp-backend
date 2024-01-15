@@ -1,6 +1,9 @@
 const Invitation = require('../../models/Tickets/model.invitation');
 const ClassModel = require('../../models/Tickets/model.class');
 const EventModel = require('../../models/Events/model.event');
+const nodemailer = require('nodemailer');
+
+
 exports.addInvitation = async (req, res) => {
     try {
         const classId = req.body.class;
@@ -106,3 +109,42 @@ exports.deleteInvitation = async (req, res) => {
         res.status(400).json({ error });
     }
 }
+exports.sendInvitationEmail = async (req, res) => {
+    try {
+      const invitationId = req.params.id;
+  
+      // Retrieve invitation details from the database based on the ID
+      const foundInvitation = await Invitation.findById(invitationId);
+      const foundEvent = await EventModel.findById(foundInvitation.event);
+      if (!foundInvitation) {
+        return res.status(404).json({ error: 'Invitation not found' });
+      }
+      console.log(foundEvent)
+      // Structure the email content based on the invitation details
+      const mailOptions = {
+        from: 'Rabie.ouallaf400@hotmail.com',
+        to: req.body.email,
+        subject: 'Invitation Email Subject',
+        text: `Dear ${foundInvitation.firstName} ${foundInvitation.lastName},\n\n` +
+              `You are invited to our event. ${foundEvent.title} for ${foundEvent.description} in ${foundEvent.startTime} at ${foundEvent.date}\n\n` +
+              'Best regards,\nYour Organization',
+      };
+  
+      // Create a Nodemailer transporter
+      const transporter = nodemailer.createTransport({
+        service: 'outlook',
+        auth: {
+          user: 'Rabie.ouallaf400@hotmail.com',
+          pass: 'Rabieouallafbenali2004..++',
+        },
+      });
+  
+      // Send the email
+      await transporter.sendMail(mailOptions);
+  
+      return res.status(200).json({ success: true, message: 'Invitation email sent successfully' });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      return res.status(500).json({ success: false, message: 'Failed to send invitation email' });
+    }
+  };

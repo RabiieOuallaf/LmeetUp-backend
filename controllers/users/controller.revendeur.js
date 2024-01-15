@@ -2,7 +2,7 @@ const RevendeurModel = require("../../models/Users/model.revendeur");
 const RevendeurErrors = require("../../errors/errors.revendeur");
 const EventModel = require("../../models/Events/model.event");
 const UserModel = require("../../models/Users/model.user");
-const TicketModel = require("../../models/Tickets/model.ticket.model");
+const TicketModel = require("../../models/Tickets/model.ticket");
 const BoughtTicketModel = require("../../models/Tickets/model.boughtTicket");
 
 const jwt = require("jsonwebtoken");

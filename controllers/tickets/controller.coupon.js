@@ -1,4 +1,4 @@
-const Coupon = require("../../models/Tickets/model.coupon.model");
+const Coupon = require("../../models/Tickets/model.coupon");
 const redisClient = require("../../utils/redisClient");
 
 exports.addCoupon = async (req, res) => {
@@ -20,7 +20,8 @@ exports.addCoupon = async (req, res) => {
     console.error("Error adding coupon:", error);
     res.status(400).json({ error });
   } finally {
-    await redisClient.quit();
+    const pong = await redisClient.ping();
+    if (pong === "PONG") await redisClient.quit();
   }
 };
 
@@ -98,13 +99,23 @@ exports.getOneCoupon = async (req, res) => {
 exports.getAllCoupons = async (req, res) => {
   try {
     redisClient.connect();
-    let cachedCoupons = await redisClient.get("coupons");
-    if (cachedCoupons.length === 0) {
+    //let cachedCoupons = await redisClient.get("coupons");
       const coupons = await Coupon.find();
-      res.json(coupons);
-    }
-
-    res.json(JSON.parse(cachedCoupons));
+      const couponsData = [];
+      for(let coupon of coupons){
+        const couponData = {
+          code : coupon.code,
+          creator : coupon.creator,
+          type : coupon.type,
+          discount : coupon.discount,
+          event : coupon.event,
+          class : coupon.class
+        }
+        couponsData.push(couponData);
+      }
+      
+      res.json(couponsData);
+    
   } catch (error) {
     console.error("Error getting coupons:", error);
     res.status(400).json({ error });
@@ -125,12 +136,10 @@ exports.deleteCoupon = async (req, res) => {
     let cachedCoupons = await redisClient.get("coupons");
     cachedCoupons = cachedCoupons ? JSON.parse(cachedCoupons) : [];
 
-    // Filter out the deleted coupon from the cached coupons
     cachedCoupons = cachedCoupons.filter(
       (coupon) => coupon._id !== req.params.id
     );
 
-    // Store the updated list back in Redis
     await redisClient.setEx("coupons", 5400, JSON.stringify(cachedCoupons));
 
     res.json({ deletedCoupon });
@@ -146,5 +155,32 @@ exports.deleteCoupon = async (req, res) => {
     } catch (error) {
       console.error("Redis client is not connected");
     }
+  }
+};
+
+
+exports.filterCoupons = async (req, res) => {
+  try {
+    const { code, discount, type } = req.query;
+    const filterCriteria = {};
+
+    if (code) {
+      filterCriteria.code = code;
+    }
+
+    if (discount) {
+      filterCriteria.discount = discount;
+    }
+
+    if (type) {
+      filterCriteria.type = type;
+    }
+
+    const filteredCoupons = await Coupon.find(filterCriteria);
+
+    res.json(filteredCoupons);
+  } catch (error) {
+    console.error("Error filtering coupons:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

@@ -1,7 +1,8 @@
 const boughtTicket = require("../../models/Tickets/model.boughtTicket");
 const Event = require("../../models/Events/model.event");
 const User = require("../../models/Users/model.user");
-const Ticket = require("../../models/Tickets/model.ticket.model");
+const Ticket = require("../../models/Tickets/model.ticket");
+const Coupon = require("../../models/Tickets/model.coupon");
 
 const generateRandomCode = () => {
   const randomNumber = Math.floor(Math.random() * 90 + 10);
@@ -15,6 +16,7 @@ exports.buyTicket = async (req, res) => {
     const event = await Event.findById(req.body.event);
     const user = await User.findById(req.body.user);
     const ticket = await Ticket.findById(req.body.ticket);
+    const coupon = await Coupon.findById(req.body.coupon);
 
     if (!event || !user || !ticket)
       return res.status(404).json({ error: "Event, user or ticket not found" });
@@ -23,6 +25,32 @@ exports.buyTicket = async (req, res) => {
       return res
         .status(400)
         .json({ error: "No available tickets for this event" });
+    }
+    if (coupon) {
+      const couponUsage = await boughtTicket.find({ coupon: req.body.coupon });
+
+      if (couponUsage.length >= coupon.usage)
+        return res.status(400).json({ error: "Coupon usage limit reached" });
+      if (coupon.expirationDate < Date.now())
+        return res.status(400).json({ error: "Coupon expired" });
+      if (coupon.event && coupon.event.toString() !== req.body.event)
+        return res
+          .status(400)
+          .json({ error: "Coupon not valid for this event" });
+      if (coupon.startDate > Date.now())
+        return res.status(400).json({ error: "Coupon not valid yet" });
+
+      if (coupon.type.toLowerCase() === "percentage") {
+
+        if (coupon.discount >= 0 && coupon.discount <= 100) {
+          ticket.price = ticket.price - (ticket.price * coupon.discount) / 100;
+        }
+      } else if (coupon.type.toLowerCase() === "amount") {
+
+        if (coupon.discount > 0) {
+          ticket.price = Math.max(0, ticket.price - coupon.discount);
+        }
+      }
     }
 
     const boughtTicketData = {
@@ -58,7 +86,6 @@ exports.getBoughtTicket = async (req, res) => {
     console.error("Error getting bought ticket:", error);
     res.status(400).json({ error });
   }
-
 };
 exports.getBoughtTicketByEvent = async (req, res) => {
   try {
@@ -75,7 +102,6 @@ exports.getBoughtTicketByEvent = async (req, res) => {
     res.status(400).json({ error });
   }
 };
-
 
 exports.getAllBoughtTickets = async (req, res) => {
   try {
