@@ -1,6 +1,9 @@
 const Event = require("../../models/Events/model.event");
 const RevendeurModel = require("../../models/Users/model.revendeur");
 const TicketModel = require("../../models/Tickets/model.ticket.model");
+const BoughtTicketModel = require("../../models/Tickets/model.boughtTicket");
+const mongoose = require('mongoose');
+
 exports.getSoldTicketsProgressByEvent = async (req, res) => {
   try {
     const eventId = req.params.id;
@@ -20,6 +23,8 @@ exports.getSoldTicketsProgressByEvent = async (req, res) => {
     res.status(400).json({ error });
   }
 };
+
+
 
 
 exports.getSoldTicketsSourcesTable = async (req, res) => {
@@ -42,61 +47,29 @@ exports.getSoldTicketsSourcesTable = async (req, res) => {
       return res.status(404).json({ error: "No revendeurs found for the event" });
     }
 
-    const eventTickets = await TicketModel.find({ event: eventId, code: { $exists: true, $lte: 9 } });
+    const revendeursSoldTickets = [];
 
-    const soldTicketsPromises = foundRevendeurs.map(async (revendeur) => {
-      try {
-        const revendeurWithSoldTickets = await RevendeurModel.findById(revendeur._id).populate("soldTickets");
+    for (const revendeur of foundRevendeurs) {
+      const revendeurId = revendeur._id;
 
-        const revendeurWithSoldTicketsOfEvent = revendeurWithSoldTickets.soldTickets.filter(
-          (soldTicket) => soldTicket.event == eventId
-        );
+      const soldTickets = await BoughtTicketModel.find({
+        revendeur: revendeurId,
+        event: eventId,
+      }).populate('ticket');
+      
+      const totalSoldTickets = soldTickets.length;
+      const totalPrice = soldTickets.reduce((acc, ticket) => acc + ticket.ticket.price, 0);
+      const pricePerUnit = totalSoldTickets ? totalPrice / totalSoldTickets : 0;
 
-        const soldTicketsWithPrice = revendeurWithSoldTicketsOfEvent.map(async (soldTicket) => {
-          try {
-            const ticket = await TicketModel.findById(soldTicket.ticket);
-
-            return {
-              ticketId: soldTicket.ticket,
-              quantity: 1, 
-              pricePerUnit: ticket.price, 
-              totalPrice: ticket.price * 1, 
-            };
-          } catch (error) {
-            console.error("Error getting ticket for soldTicket:", error);
-            throw error;
-          }
-        });
-
-        const totalPrice = (await Promise.all(soldTicketsWithPrice)).reduce((sum, ticket) => sum + ticket.totalPrice, 0);
-
-        return {
-          revendeurId: revendeur._id,
-          revendeurFirstName: revendeur.firstName,
-          revendeurLastName: revendeur.lastName,
-          soldTickets: await Promise.all(soldTicketsWithPrice),
-          totalPrice: totalPrice,
-        };
-      } catch (error) {
-        console.error("Error getting sold tickets for revendeur:", error);
-        throw error;
-      }
-    });
-
-    const eventTicketsWithPrice = eventTickets.map((ticket) => ({
-      ticketId: ticket._id,
-      quantity: 1, 
-      pricePerUnit: ticket.price, 
-      totalPrice: ticket.price * 1, 
-    }));
-
-    const eventTotalPrice = eventTicketsWithPrice.reduce((sum, ticket) => sum + ticket.totalPrice, 0);
-
-    const revendeursSoldTickets = await Promise.all(soldTicketsPromises);
+      revendeursSoldTickets.push({
+        revendeurId: revendeurId,
+        totalSoldTickets: totalSoldTickets,
+        totalPrice: totalPrice,
+        pricePerUnit: pricePerUnit,
+      });
+    }
 
     res.status(200).json({
-      eventTickets: eventTicketsWithPrice,
-      eventTotalPrice: eventTotalPrice,
       revendeursSoldTickets: revendeursSoldTickets,
     });
   } catch (error) {
@@ -104,6 +77,3 @@ exports.getSoldTicketsSourcesTable = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
-
-
