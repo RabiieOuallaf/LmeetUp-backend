@@ -167,6 +167,16 @@ exports.sellTicket = async (req, res, next) => {
         .status(400)
         .json({ error: "No available tickets for this event" });
 
+    const isRevendeurAssignedToEvent = foundEvent.revendeur.some(
+      (revendeur) => revendeur.toString() === foundRevendeur._id.toString()
+    );
+
+
+    if(!isRevendeurAssignedToEvent) {
+      return res.status(400).json({ error: "Revendeur is not assigned to this event" });
+    }
+
+    
     const boughtTicketData = {
       ...req.body,
       price: foundTicket.price,
