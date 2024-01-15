@@ -1,8 +1,5 @@
 const Event = require("../../models/Events/model.event");
-const RevendeurModel = require("../../models/Users/model.revendeur");
-const TicketModel = require("../../models/Tickets/model.ticket.model");
 const BoughtTicketModel = require("../../models/Tickets/model.boughtTicket");
-const mongoose = require('mongoose');
 
 exports.getSoldTicketsProgressByEvent = async (req, res) => {
   try {
@@ -122,15 +119,15 @@ exports.getSoldTicketsSourcesTable = async (req, res) => {
       }
     }
 
-    const total = revendeursSoldTickets.reduce(
-      (acc,curr) => {
+    const total = revendeursSoldTickets.concat(onlineSoldTickets).reduce(
+      (acc, curr) => {
         acc.totalPrice += curr.totalPrice;
         acc.totalTickets += curr.totalSoldTickets;
         return acc;
-      }
-      ,{totalPrice: 0, totalTickets: 0}
-    )
-
+      },
+      { totalPrice: 0, totalTickets: 0 }
+    );
+    
     res.status(200).json({
       revendeursSoldTickets: revendeursSoldTickets,
       onlineSoldTickets: onlineSoldTickets,
