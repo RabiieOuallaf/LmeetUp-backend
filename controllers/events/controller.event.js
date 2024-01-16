@@ -3,7 +3,7 @@ const redisClient = require("../../utils/redisClient");
 const fs = require("fs");
 const path = require("path");
 const RevendeurModel = require("../../models/Users/model.revendeur");
-
+const moment = require("moment");
 
 exports.addEvent = async (req, res) => {
   try {
@@ -385,6 +385,44 @@ exports.filterEvents = async (req, res) => {
 
     if (req.query.status) {
       filter.status = req.query.status;
+    }
+
+    // Date Filtering
+    if (req.query.dateFilter) {
+      const currentDate = moment();
+
+      switch (req.query.dateFilter) {
+        case 'thisDay':
+          filter.date = {
+            $gte: moment(currentDate).startOf('day'),
+            $lte: moment(currentDate).endOf('day'),
+          };
+          break;
+
+        case 'thisWeek':
+          filter.date = {
+            $gte: moment(currentDate).startOf('week'),
+            $lte: moment(currentDate).endOf('week'),
+          };
+          break;
+
+        case 'thisMonth':
+          filter.date = {
+            $gte: moment(currentDate).startOf('month'),
+            $lte: moment(currentDate).endOf('month'),
+          };
+          break;
+
+        case 'thisYear':
+          filter.date = {
+            $gte: moment(currentDate).startOf('year'),
+            $lte: moment(currentDate).endOf('year'),
+          };
+          break;
+
+        default:
+          break;
+      }
     }
 
     const events = await Event.find(filter)
