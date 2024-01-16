@@ -122,7 +122,7 @@ exports.sendInvitationEmail = async (req, res) => {
       console.log(foundEvent)
       // Structure the email content based on the invitation details
       const mailOptions = {
-        from: 'Rabie.ouallaf400@hotmail.com',
+        from: '',
         to: req.body.email,
         subject: 'Invitation Email Subject',
         text: `Dear ${foundInvitation.firstName} ${foundInvitation.lastName},\n\n` +
@@ -134,8 +134,8 @@ exports.sendInvitationEmail = async (req, res) => {
       const transporter = nodemailer.createTransport({
         service: 'outlook',
         auth: {
-          user: 'Rabie.ouallaf400@hotmail.com',
-          pass: 'Rabieouallafbenali2004..++',
+          user: '',
+          pass: '',
         },
       });
   

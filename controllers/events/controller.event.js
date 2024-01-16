@@ -15,6 +15,10 @@ exports.addEvent = async (req, res) => {
         : "",
     };
 
+    if(event.totalTickets !== event.totalTicketOffline + event.totalTicketOnline){
+      return res.status(400).json({ error: "Total tickets must equal" });
+    }
+
     const event = await new Event(eventData).save();
 
     if (req.body.title || req.body.description || req.body.eventClass) {
