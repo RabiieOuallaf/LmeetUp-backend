@@ -387,7 +387,6 @@ exports.filterEvents = async (req, res) => {
       filter.status = req.query.status;
     }
 
-    // Date Filtering
     if (req.query.dateFilter) {
       const currentDate = moment();
 

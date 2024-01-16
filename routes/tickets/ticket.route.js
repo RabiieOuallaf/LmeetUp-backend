@@ -37,4 +37,7 @@ router.get('/getAllReservations', getAllReservations)
 router.get('/getReservedTicket/:code', getReservedTicket)
 router.get('/getAllBoughtAndReservedTicketsByEvent/:event', getAllBoughtAndReservedTicketsByEvent)
 router.get('/getAllReservedTicketsByEvent/:event', getAllReservedTicketsByEvent)
+
+// Filter 
+router.get('/filter', getAllTickets)
 module.exports = router;

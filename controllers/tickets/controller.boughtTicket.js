@@ -233,3 +233,62 @@ exports.getAllReservedTicketsByEvent = async (req, res) => {
     res.status(400).json({ error });
   }
 }
+
+exports.filterBoughtTickets = async (req, res) => {
+  try {
+    const filter = {};
+
+    if(req.query.code) {
+      filter.code = req.query.code;
+    }
+
+    if(req.query.event) {
+      filter.event = req.query.event;
+    }
+
+    if(req.query.user) {
+      filter.user = req.query.user;
+    }
+
+    if(req.query.ticket) {
+      filter.ticket = req.query.ticket;
+    }
+
+    if(req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    if(req.query.price) {
+      filter.price = req.query.price;
+    }
+
+    if(req.query.coupon) {
+      filter.coupon = req.query.coupon;
+    }
+
+    if(req.query.class) {
+      filter.class = req.query.class;
+    }
+
+    if(req.query.revendeur) {
+      filter.revendeur = req.query.revendeur;
+    }
+    
+
+
+    const foundBoughtTickets = await boughtTicket
+      .find(filter)
+      .populate("event user ticket");
+
+    if (!foundBoughtTickets || foundBoughtTickets.length === 0)
+      return res.status(404).json({ error: "Filtered bought tickets not found" });
+
+    const serializedBoughtTickets = foundBoughtTickets.map((boughtTicket) =>
+      boughtTicket.toJSON()
+    );
+    res.json(serializedBoughtTickets);
+  } catch (error) {
+    console.error("Error filtering bought tickets:", error);
+    res.status(400).json({ error });
+  }
+};
