@@ -77,7 +77,8 @@ exports.getBoughtTicket = async (req, res) => {
     const foundBoughtTicket = await boughtTicket
       .findOne({ code })
       .populate("event user ticket");
-    if (!foundBoughtTicket)
+
+    if (!foundBoughtTicket || foundBoughtTicket.status != "payed")
       return res.status(404).json({ error: "Bought ticket not found" });
 
     const serializedBoughtTicket = foundBoughtTicket.toJSON();
@@ -87,13 +88,14 @@ exports.getBoughtTicket = async (req, res) => {
     res.status(400).json({ error });
   }
 };
+
 exports.getBoughtTicketByEvent = async (req, res) => {
   try {
     const event = req.params.event;
     const foundBoughtTicket = await boughtTicket
-      .find({ event })
+      .find({ event, status: { $ne: "payed" }})
       .populate("event user ticket");
-    if (!foundBoughtTicket)
+    if (!foundBoughtTicket )
       return res.status(404).json({ error: "Bought ticket not found" });
 
     res.json(foundBoughtTicket);
@@ -103,10 +105,12 @@ exports.getBoughtTicketByEvent = async (req, res) => {
   }
 };
 
+
+
 exports.getAllBoughtTickets = async (req, res) => {
   try {
     const foundBoughtTickets = await boughtTicket
-      .find()
+      .find({ status: { $ne: "payed" } })
       .populate("event user ticket");
     if (!foundBoughtTickets)
       return res.status(404).json({ error: "Bought tickets not found" });
@@ -120,3 +124,112 @@ exports.getAllBoughtTickets = async (req, res) => {
     res.status(400).json({ error });
   }
 };
+
+exports.getAllReservations = async (req, res) => {
+  try {
+    const foundReservations = await boughtTicket
+      .find({ status: "onhold" })
+      .populate("event user ticket");
+    if (!foundReservations)
+      return res.status(404).json({ error: "Reservations not found" });
+
+    const serializedReservations = foundReservations.map((reservation) =>
+      reservation.toJSON()
+    );
+    res.json(serializedReservations);
+  } catch (error) {
+    console.error("Error getting reservations:", error);
+    res.status(400).json({ error });
+  }
+}
+
+
+exports.getReservedTicket = async (req, res) => {
+  try {
+    const code = req.params.code;
+    const foundReservedTicket = await boughtTicket
+      .findOne({ code })
+      .populate("event user ticket");
+
+    if (!foundReservedTicket || foundReservedTicket.status != "onhold")
+      return res.status(404).json({ error: "Reserved ticket not found" });
+
+    const serializedReservedTicket = foundReservedTicket.toJSON();
+    res.json(serializedReservedTicket);
+  } catch (error) {
+    console.error("Error getting reserved ticket:", error);
+    res.status(400).json({ error });
+  }
+}
+
+exports.getReservedTicketByEvent = async (req, res) => {
+  try {
+    const event = req.params.event;
+    const foundReservedTicket = await boughtTicket
+      .find({ event, status: "onhold" })
+      .populate("event user ticket");
+    if (!foundReservedTicket)
+      return res.status(404).json({ error: "Reserved ticket not found" });
+
+    res.json(foundReservedTicket);
+  } catch (error) {
+    console.error("Error getting reserved ticket:", error);
+    res.status(400).json({ error });
+  }
+}
+
+exports.getAllBoughtAndReservedTickets = async (req, res) => {
+  try {
+    const foundBoughtAndReservedTickets = await boughtTicket
+      .find()
+      .populate("event user ticket");
+    if (!foundBoughtAndReservedTickets)
+      return res.status(404).json({ error: "Bought tickets not found" });
+
+    const serializedBoughtAndReservedTickets = foundBoughtAndReservedTickets.map((boughtTicket) =>
+      boughtTicket.toJSON()
+    );
+    res.json(serializedBoughtAndReservedTickets);
+  } catch (error) {
+    console.error("Error getting bought tickets:", error);
+    res.status(400).json({ error });
+  }
+}
+
+exports.getAllBoughtAndReservedTicketsByEvent = async (req, res) => {
+  try {
+    const event = req.params.event;
+    const foundBoughtAndReservedTickets = await boughtTicket
+      .find({ event })
+      .populate("event user ticket");
+    if (!foundBoughtAndReservedTickets)
+      return res.status(404).json({ error: "Bought tickets not found" });
+
+    const serializedBoughtAndReservedTickets = foundBoughtAndReservedTickets.map((boughtTicket) =>
+      boughtTicket.toJSON()
+    );
+    res.json(serializedBoughtAndReservedTickets);
+  } catch (error) {
+    console.error("Error getting bought tickets:", error);
+    res.status(400).json({ error });
+  }
+}
+
+exports.getAllReservedTicketsByEvent = async (req, res) => {
+  try {
+    const event = req.params.event;
+    const foundBoughtAndReservedTickets = await boughtTicket
+      .find({ event , status : "onhold"})
+      .populate("event user ticket");
+    if (!foundBoughtAndReservedTickets)
+      return res.status(404).json({ error: "Bought tickets not found" });
+
+    const serializedBoughtAndReservedTickets = foundBoughtAndReservedTickets.map((boughtTicket) =>
+      boughtTicket.toJSON()
+    );
+    res.json(serializedBoughtAndReservedTickets);
+  } catch {
+    console.error("Error getting bought tickets:", error);
+    res.status(400).json({ error });
+  }
+}

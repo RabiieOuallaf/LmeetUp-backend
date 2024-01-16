@@ -17,8 +17,7 @@ const { addEvent ,
 const { verifyAuthHeaderToken } = require('../../middlewares/Authentification/superAdminAuth')
 const { getSoldTicketsProgressByEvent, 
         getSoldTicketsSourcesTable,
-        getSoldTicketsClassesTable
-
+        getSoldTicketsClassesTable,
     } = require('../../controllers/events/controller.eventStatistics')
 
 

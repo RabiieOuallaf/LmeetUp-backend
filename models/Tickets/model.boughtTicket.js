@@ -25,6 +25,10 @@ const boughtTicketSchema = new mongoose.Schema({
     },
     price : {
         type : Number
+    },
+    status : {
+        type : String,
+        default : 'payed'
     }
     
 }, { timestamps: true });
