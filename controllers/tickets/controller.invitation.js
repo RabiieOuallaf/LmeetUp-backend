@@ -1,8 +1,8 @@
-const Invitation = require('../../models/Tickets/model.invitation');
-const ClassModel = require('../../models/Tickets/model.class');
-const EventModel = require('../../models/Events/model.event');
-const nodemailer = require('nodemailer');
-
+const Invitation = require('../../models/Tickets/model.invitation')
+const ClassModel = require('../../models/Tickets/model.class')
+const EventModel = require('../../models/Events/model.event')
+const nodemailer = require('nodemailer')
+const puppeteer = require('puppeteer')
 
 exports.addInvitation = async (req, res) => {
     try {
@@ -113,14 +113,12 @@ exports.sendInvitationEmail = async (req, res) => {
     try {
       const invitationId = req.params.id;
   
-      // Retrieve invitation details from the database based on the ID
       const foundInvitation = await Invitation.findById(invitationId);
       const foundEvent = await EventModel.findById(foundInvitation.event);
       if (!foundInvitation) {
         return res.status(404).json({ error: 'Invitation not found' });
       }
       console.log(foundEvent)
-      // Structure the email content based on the invitation details
       const mailOptions = {
         from: '',
         to: req.body.email,
@@ -130,7 +128,6 @@ exports.sendInvitationEmail = async (req, res) => {
               'Best regards,\nYour Organization',
       };
   
-      // Create a Nodemailer transporter
       const transporter = nodemailer.createTransport({
         service: 'outlook',
         auth: {
@@ -139,7 +136,6 @@ exports.sendInvitationEmail = async (req, res) => {
         },
       });
   
-      // Send the email
       await transporter.sendMail(mailOptions);
   
       return res.status(200).json({ success: true, message: 'Invitation email sent successfully' });
@@ -148,3 +144,48 @@ exports.sendInvitationEmail = async (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to send invitation email' });
     }
   };
+
+exports.downloadInvitationPdf = async (req, res) => {
+    try {
+        const invitationId = req.params.id;
+        const foundInvitation = await Invitation.findById(invitationId);
+        const foundEvent = await EventModel.findById(foundInvitation.event);
+
+        if (!foundInvitation)
+            return res.status(404).json({ error: "Invitation not found" });
+
+        const pdfBuffer = await generateInvitationPdf(foundInvitation, foundEvent);
+
+        res.set('Content-Type', 'application/pdf');
+        res.set('Content-Disposition', 'attachment; filename=invitation.pdf');
+        res.end(pdfBuffer);
+    } catch (error) {
+        console.error("Error downloading invitation:", error);
+        res.status(400).json({ error });
+    }
+}
+
+async function generateInvitationPdf(invitation, event) {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+  
+    const htmlContent = `
+      <h1>Invitation</h1>
+      <p>Dear ${invitation.firstName} ${invitation.lastName},</p>
+      <p>You are cordially invited to the following event:</p>
+      <ul>
+        <li>Title: ${event.title}</li>
+        <li>Description: ${event.description}</li>
+        <li>Date: ${event.date}</li>
+        <li>Time: ${event.startTime}</li>
+      </ul>
+      <p>We look forward to seeing you there!</p>
+      <p>Sincerely,<br>Your Organization</p>
+    `;
+  
+    await page.setContent(htmlContent);
+    const pdfBuffer = await page.pdf({ format: 'A4' });
+    await browser.close();
+  
+    return pdfBuffer;
+  }

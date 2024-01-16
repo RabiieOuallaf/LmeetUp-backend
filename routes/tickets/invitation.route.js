@@ -7,11 +7,13 @@ const {
     getInvitation,
     getInvitationByFirstAndLastName, 
     deleteInvitation,
-    sendInvitationEmail
+    sendInvitationEmail,
+    downloadInvitationPdf
 } = require('../../controllers/tickets/controller.invitation')
 
 
 router.post('/send-email/:id', sendInvitationEmail)
+router.get('/download/:id', downloadInvitationPdf)
 
 router.post('/add', addInvitation)
 router.put('/update/:id', updateInvitation)
